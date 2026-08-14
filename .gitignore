@@ -92,3 +92,14 @@ logs/
 
 # CodeGraph index
 .codegraph
+node_modules/
+dist/
+build/
+.expo/
+.expo-shared/
+.eslintcache
+expo/expo-env.d.ts
+expo-env.d.ts
+*.tsbuildinfo
+node-compile-cache/
+.codegraph/

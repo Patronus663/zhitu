@@ -1,0 +1,29 @@
+{
+  "name": "expo-express-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "bash .cozeproj/scripts/dev_run.sh",
+    "build": "bash .cozeproj/scripts/prod_build.sh",
+    "start": "bash .cozeproj/scripts/prod_run.sh",
+    "preinstall": "npx only-allow pnpm",
+    "lint:client": "npm run lint --prefix ./client",
+    "lint:server": "npm run lint --prefix ./server",
+    "lint:all": "npm run lint --prefix ./client; npm run lint --prefix ./server",
+    "validate": "pnpm dlx concurrently --group --names expo,server \"pnpm lint:client\" \"pnpm lint:server\""
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.27.2"
+    },
+    "patchedDependencies": {
+      "expo@54.0.33": "patches/expo@54.0.33.patch"
+    }
+  }
+}

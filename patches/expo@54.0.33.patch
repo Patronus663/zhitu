@@ -1,0 +1,45 @@
+diff --git a/src/async-require/hmr.ts b/src/async-require/hmr.ts
+index 33ce50ee2950c40d2b0553b148710f1e24e44f3d..3d78cb02dd7e96ac9727a2935d8178f2c7e95982 100644
+--- a/src/async-require/hmr.ts
++++ b/src/async-require/hmr.ts
+@@ -216,6 +216,40 @@ const HMRClient: HMRClientNativeInterface = {
+
+     client.on('update-done', () => {
+       hideLoading();
++      if (process.env.EXPO_PUBLIC_COZE_PROJECT_ID && typeof window !== 'undefined' && window.location) {
++        if((window as any).__updateTimeoutId) {
++          clearTimeout((window as any).__updateTimeoutId);
++        }
++        const updateDoneTime = Date.now();
++        (window as any).__updateDoneTime = updateDoneTime;
++        (window as any).__updateTimeoutId = setTimeout(() => {
++          const lastUpdateTime = (window as any).__updateDoneTime;
++          if (lastUpdateTime !== updateDoneTime) return;
++          const checkServerAndReload = (retriesLeft: number) => {
++            if ((window as any).__updateDoneTime !== updateDoneTime) return;
++            fetch(`/favicon.ico?_t=${Date.now()}`)
++              .then((response) => {
++                if (response.status === 200) {
++                  console.warn('[HMR] Server is ready (200), reloading now.');
++                  window.location.reload();
++                } else {
++                  throw new Error(`Server status: ${response.status}`);
++                }
++              }).catch((error) => {
++                console.warn(`[HMR] Check failed (${error.message}). Retries left: ${retriesLeft}`);
++                if (retriesLeft > 0) {
++                  setTimeout(() => {
++                    checkServerAndReload(retriesLeft - 1);
++                  }, 5000);
++                } else {
++                  console.error('[HMR] Server unreachable after 6 attempts. Abort reload.');
++                }
++              });
++          };
++          checkServerAndReload(6);
++        }, 35_000);
++      }
++      console.log('[HMR] Update done.');
+     });
+
+     client.on('error', (data: { type: string; message: string }) => {
