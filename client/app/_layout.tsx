@@ -22,7 +22,10 @@ export default function RootLayout() {
           headerShown: false
         }}
       >
-        <Stack.Screen name="index" options={{ title: "" }} />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="question-entry" />
+        <Stack.Screen name="plan-create" />
       </Stack>
       <Toast />
     </Provider>

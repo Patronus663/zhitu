@@ -25,6 +25,7 @@ export default [
       'eslint.config.*',
       'metro.config.*',
       './scripts/**',
+      'heroui/**',        // 排除 heroui 库代码
     ],
   },
   regexp.configs["flat/recommended"],

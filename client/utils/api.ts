@@ -1,0 +1,223 @@
+const API_BASE = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || '请求失败');
+  }
+  return res.json();
+}
+
+async function uploadFile<T>(path: string, formData: FormData): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || '上传失败');
+  }
+  return res.json();
+}
+
+// User APIs
+export const userApi = {
+  /**
+   * 服务端文件：server/src/routes/users.ts
+   * 接口：POST /api/v1/users
+   * Body 参数：id?: string, nickname: string, major?: string, grade?: string, learning_goal?: string, mastery_expectation?: string, personalized_info?: string
+   */
+  create: (data: { id?: string; nickname: string; major?: string; grade?: string; learning_goal?: string; mastery_expectation?: string; personalized_info?: string }) =>
+    request<{ user: any }>('/api/v1/users', { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/users.ts
+   * 接口：GET /api/v1/users/:id
+   * Path 参数：id: string
+   */
+  get: (id: string) =>
+    request<{ user: any }>(`/api/v1/users/${id}`),
+  /**
+   * 服务端文件：server/src/routes/users.ts
+   * 接口：PUT /api/v1/users/:id
+   * Path 参数：id: string
+   * Body 参数：nickname?: string, major?: string, grade?: string, learning_goal?: string, mastery_expectation?: string, personalized_info?: string, is_onboarded?: boolean
+   */
+  update: (id: string, data: Record<string, any>) =>
+    request<{ user: any }>(`/api/v1/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+};
+
+// Question APIs
+export const questionApi = {
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：POST /api/v1/questions/analyze-image
+   * Body: FormData with images[]
+   */
+  analyzeImage: (formData: FormData) =>
+    uploadFile<{ text: string }>('/api/v1/questions/analyze-image', formData),
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：POST /api/v1/questions/analyze
+   * Body 参数：content: string, wrong_answer?: string, correct_answer?: string
+   */
+  analyze: (data: { content: string; wrong_answer?: string; correct_answer?: string }) =>
+    request<{ analysis: any }>('/api/v1/questions/analyze', { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：POST /api/v1/questions/validate-tags
+   * Body 参数：content: string, subject: string, question_type: string, knowledge_points: string[], methods: string[], difficulty: number
+   */
+  validateTags: (data: any) =>
+    request<{ validation: any }>('/api/v1/questions/validate-tags', { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：POST /api/v1/questions
+   * Body 参数：user_id: string, content: string, answer: string, images?: string[], subject: string, question_type: string, knowledge_points: string[], methods: string[], difficulty: number, wrong_answer?: string, error_analysis?: string
+   */
+  create: (data: any) =>
+    request<any>('/api/v1/questions', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Search APIs
+export const searchApi = {
+  /**
+   * 服务端文件：server/src/routes/search.ts
+   * 接口：POST /api/v1/search
+   * Body 参数：user_id?: string, scope: 'cloud' | 'user', query: string, count: number
+   * 返回：{ questions: any[], search_intent: any, total: number }
+   */
+  search: async (data: { user_id?: string; scope: 'cloud' | 'user'; query: string; count: number }) => {
+    const result = await request<{ questions: any[]; search_intent: any; total: number }>('/api/v1/search', {
+      method: 'POST',
+      body: JSON.stringify({
+        scope: data.scope,
+        user_id: data.user_id,
+        description: data.query,
+        count: data.count,
+      }),
+    });
+    return { results: result.questions };
+  },
+  /**
+   * 服务端文件：server/src/routes/search.ts
+   * 接口：POST /api/v1/search/rate
+   * Body 参数：question_id: string, user_id: string, rating: number
+   */
+  rate: (questionId: string, userId: string | undefined, rating: number) =>
+    request<any>('/api/v1/search/rate', { method: 'POST', body: JSON.stringify({ question_id: questionId, user_id: userId, rating }) }),
+  /**
+   * 服务端文件：server/src/routes/search.ts
+   * 接口：POST /api/v1/search/feedback
+   * Body 参数：question_id: string, user_id: string
+   */
+  feedback: (questionId: string, userId: string | undefined) =>
+    request<{ removed: boolean }>('/api/v1/search/feedback', { method: 'POST', body: JSON.stringify({ question_id: questionId, user_id: userId }) }),
+};
+
+// Learning APIs
+export const learningApi = {
+  /**
+   * 服务端文件：server/src/routes/learning.ts
+   * 接口：GET /api/v1/learning/:user_id
+   * Path 参数：user_id: string
+   * 返回：{ profile: any, user: any }
+   */
+  getProfile: async (userId: string) => {
+    const result = await request<{ profile: any; user: any }>(`/api/v1/learning/${userId}`);
+    return result.profile || {};
+  },
+  /**
+   * 服务端文件：server/src/routes/learning.ts
+   * 接口：POST /api/v1/learning/analyze
+   * Body 参数：user_id: string
+   * 返回：{ analysis: { summary, strengths, weaknesses, suggestions, ... } }
+   */
+  analyze: async (userId: string) => {
+    const result = await request<{ analysis: any }>('/api/v1/learning/analyze', { method: 'POST', body: JSON.stringify({ user_id: userId }) });
+    const a = result.analysis || {};
+    const suggestions = [
+      a.summary || '',
+      ...(a.suggestions || []),
+      ...(a.recommended_actions || []),
+    ].filter(Boolean).join('\n\n');
+    return { suggestions };
+  },
+  /**
+   * 服务端文件：server/src/routes/learning.ts
+   * 接口：POST /api/v1/learning/:user_id/feedback
+   * Body 参数：feedback: string
+   */
+  updateWithFeedback: (userId: string, feedback: string) =>
+    request<any>(`/api/v1/learning/${userId}/feedback`, { method: 'POST', body: JSON.stringify({ feedback }) }),
+};
+
+// Plan APIs
+export const planApi = {
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：GET /api/v1/plans/:user_id/today
+   * Path 参数：user_id: string
+   * 返回：{ today_items: any[], week_items: any[], stats?: { total, completed } }
+   */
+  getToday: async (userId: string) => {
+    const result = await request<{ today_items: any[]; week_items: any[] }>(`/api/v1/plans/${userId}/today`);
+    const todayItems = result.today_items || [];
+    const weekItems = result.week_items || [];
+    const total = todayItems.length + weekItems.length;
+    const completed = 0;
+    return { today_items: todayItems, week_items: weekItems, stats: { total, completed } };
+  },
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：POST /api/v1/plans/generate
+   * Body 参数：user_id: string, learning_content: string
+   * 返回：{ plan_data: any }
+   */
+  generate: async (userId: string, learningContent: string, _duration: number) => {
+    const result = await request<{ plan_data: any }>('/api/v1/plans/generate', { method: 'POST', body: JSON.stringify({ user_id: userId, learning_content: learningContent }) });
+    return { plan: result.plan_data };
+  },
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：POST /api/v1/plans
+   * Body 参数：user_id: string, title: string, description: string, items: Array<{title: string, description?: string, due_date: string}>
+   */
+  create: (data: { user_id: string; title: string; description: string; items: any[] }) =>
+    request<any>('/api/v1/plans', { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：PUT /api/v1/plans/items/:item_id/complete
+   * Path 参数：item_id: string
+   * Body 参数：is_completed: boolean
+   */
+  completeItem: (itemId: string, isCompleted: boolean) =>
+    request<any>(`/api/v1/plans/items/${itemId}/complete`, { method: 'PUT', body: JSON.stringify({ is_completed: isCompleted }) }),
+};
+
+// Chat APIs
+export const chatApi = {
+  /**
+   * 服务端文件：server/src/routes/chat.ts
+   * 接口：GET /api/v1/chat/:user_id/messages
+   * Path 参数：user_id: string
+   */
+  getMessages: (userId: string) =>
+    request<{ messages: any[] }>(`/api/v1/chat/${userId}/messages`),
+  /**
+   * 服务端文件：server/src/routes/chat.ts
+   * 接口：POST /api/v1/chat/:user_id/messages
+   * Body 参数：content: string
+   * 返回：{ reply: string, message: any }
+   */
+  send: (userId: string, content: string) =>
+    request<{ reply: string; message: any }>(`/api/v1/chat/${userId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+};
