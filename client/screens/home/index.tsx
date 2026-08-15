@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
@@ -20,6 +20,12 @@ export default function HomeScreen() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [moveModalVisible, setMoveModalVisible] = useState(false);
   const [moveDate, setMoveDate] = useState('');
+  // Add task modal state
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [addTarget, setAddTarget] = useState<'today' | 'week'>('today');
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDesc, setNewTaskDesc] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -113,6 +119,45 @@ export default function HomeScreen() {
     setMenuVisible(true);
   };
 
+  const openAddModal = (target: 'today' | 'week') => {
+    setAddTarget(target);
+    setNewTaskTitle('');
+    setNewTaskDesc('');
+    if (target === 'today') {
+      setNewTaskDate(new Date().toISOString().split('T')[0]);
+    } else {
+      const d = new Date(Date.now() + 3 * 86400000);
+      setNewTaskDate(d.toISOString().split('T')[0]);
+    }
+    setAddModalVisible(true);
+  };
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim()) {
+      alert('请输入任务标题');
+      return;
+    }
+    // Find the active plan
+    if (!user) return;
+    try {
+      const plans = await planApi.getUserPlans(user.id);
+      const activePlan = plans.find((p: any) => p.status === 'active');
+      if (!activePlan) {
+        alert('请先创建一个学习计划');
+        return;
+      }
+      await planApi.addItem(activePlan.id, {
+        title: newTaskTitle.trim(),
+        description: newTaskDesc.trim() || undefined,
+        due_date: newTaskDate || undefined,
+      });
+      setAddModalVisible(false);
+      await loadData();
+    } catch {
+      alert('添加失败');
+    }
+  };
+
   const progress = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}月${today.getDate()}日`;
@@ -153,10 +198,15 @@ export default function HomeScreen() {
         {/* Today's Tasks */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>今日任务</Text>
-            {todayItems.length > 0 && (
-              <Text style={styles.sectionBadge}>{todayItems.length}</Text>
-            )}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.sectionTitle}>今日任务</Text>
+              {todayItems.length > 0 && (
+                <Text style={styles.sectionBadge}>{todayItems.length}</Text>
+              )}
+            </View>
+            <TouchableOpacity style={styles.addBtn} onPress={() => openAddModal('today')}>
+              <FontAwesome6 name="plus" size={16} color="#7B2D8E" />
+            </TouchableOpacity>
           </View>
           {todayItems.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -197,10 +247,15 @@ export default function HomeScreen() {
         {/* This Week */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>本周计划</Text>
-            {weekItems.length > 0 && (
-              <Text style={styles.sectionBadge}>{weekItems.length}</Text>
-            )}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.sectionTitle}>本周计划</Text>
+              {weekItems.length > 0 && (
+                <Text style={styles.sectionBadge}>{weekItems.length}</Text>
+              )}
+            </View>
+            <TouchableOpacity style={styles.addBtn} onPress={() => openAddModal('week')}>
+              <FontAwesome6 name="plus" size={16} color="#7B2D8E" />
+            </TouchableOpacity>
           </View>
           {weekItems.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -320,6 +375,57 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Add Task Modal */}
+      <Modal visible={addModalVisible} transparent animationType="slide" onRequestClose={() => setAddModalVisible(false)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setAddModalVisible(false)}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%' }}>
+            <View style={styles.addModal}>
+              <View style={styles.addModalHeader}>
+                <Text style={styles.addModalTitle}>添加{addTarget === 'today' ? '今日' : '本周'}任务</Text>
+                <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                  <FontAwesome6 name="xmark" size={20} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.addModalBody}>
+                <Text style={styles.addLabel}>任务标题</Text>
+                <TextInput
+                  style={styles.addInput}
+                  placeholder="输入任务标题"
+                  placeholderTextColor="#9CA3AF"
+                  value={newTaskTitle}
+                  onChangeText={setNewTaskTitle}
+                />
+                <Text style={styles.addLabel}>任务描述（可选）</Text>
+                <TextInput
+                  style={[styles.addInput, { height: 80, textAlignVertical: 'top' }]}
+                  placeholder="输入任务描述"
+                  placeholderTextColor="#9CA3AF"
+                  value={newTaskDesc}
+                  onChangeText={setNewTaskDesc}
+                  multiline
+                />
+                <Text style={styles.addLabel}>截止日期</Text>
+                <TextInput
+                  style={styles.addInput}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#9CA3AF"
+                  value={newTaskDate}
+                  onChangeText={setNewTaskDate}
+                />
+              </View>
+              <View style={styles.moveActions}>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setAddModalVisible(false)}>
+                  <Text style={styles.cancelBtnText}>取消</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleAddTask}>
+                  <Text style={styles.saveBtnText}>添加任务</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </TouchableOpacity>
+      </Modal>
     </Screen>
   );
 }
@@ -376,4 +482,12 @@ const styles = StyleSheet.create({
   cancelBtnText: { color: '#6B7280', fontSize: 14 },
   saveBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: '#7B2D8E' },
   saveBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
+  // Add button and modal styles
+  addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center' },
+  addModal: { backgroundColor: '#FFF', borderRadius: 20, width: 340, padding: 24 },
+  addModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  addModalTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E' },
+  addModalBody: { gap: 12, marginBottom: 20 },
+  addLabel: { fontSize: 13, fontWeight: '500', color: '#6B7280' },
+  addInput: { backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A2E', borderWidth: 1, borderColor: '#E5E7EB' },
 });

@@ -195,6 +195,23 @@ export const planApi = {
     request<any>('/api/v1/plans', { method: 'POST', body: JSON.stringify(data) }),
   /**
    * 服务端文件：server/src/routes/plans.ts
+   * 接口：GET /api/v1/plans/:user_id
+   * Path 参数：user_id: string
+   * 返回：Array<{ id, title, status, ... }>
+   */
+  getUserPlans: (userId: string) =>
+    request<any[]>(`/api/v1/plans/${userId}`),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：POST /api/v1/plans/:plan_id/items
+   * Path 参数：plan_id: string
+   * Body 参数：title: string, description?: string, due_date?: string, sort_order?: number
+   * 返回：{ item: { id, title, description, due_date, is_completed, ... } }
+   */
+  addItem: (planId: string, data: { title: string; description?: string; due_date?: string; sort_order?: number }) =>
+    request<{ item: any }>(`/api/v1/plans/${planId}/items`, { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
    * 接口：PUT /api/v1/plans/items/:item_id/complete
    * Path 参数：item_id: string
    * Body 参数：is_completed: boolean

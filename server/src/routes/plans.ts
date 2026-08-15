@@ -180,6 +180,43 @@ router.post('/', async (req, res) => {
   }
 });
 
+// POST /api/v1/plans/:plan_id/items - Add a new item to a plan
+router.post('/:plan_id/items', async (req, res) => {
+  try {
+    const { title, description, due_date, sort_order } = req.body;
+    if (!title) {
+      return res.status(400).json({ error: '任务标题不能为空' });
+    }
+    const client = getSupabaseClient();
+
+    // Get max sort_order for this plan
+    const { data: existingItems } = await client
+      .from('plan_items')
+      .select('sort_order')
+      .eq('plan_id', req.params.plan_id)
+      .order('sort_order', { ascending: false })
+      .limit(1);
+    const maxOrder = existingItems?.[0]?.sort_order || 0;
+
+    const { data, error } = await client
+      .from('plan_items')
+      .insert({
+        plan_id: req.params.plan_id,
+        title,
+        description: description || null,
+        due_date: due_date || null,
+        sort_order: sort_order || maxOrder + 1,
+        is_completed: false,
+      })
+      .select()
+      .single();
+    if (error) throw new Error(`创建失败: ${error.message}`);
+    res.json({ item: data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // PUT /api/v1/plans/items/:item_id/complete - Mark item as complete
 router.put('/items/:item_id/complete', async (req, res) => {
   try {
