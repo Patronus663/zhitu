@@ -17,9 +17,9 @@ export default function TabLayout() {
     backgroundColor: background,
     borderTopWidth: 1,
     borderTopColor: border,
-    paddingBottom: insets.bottom > 0 ? 8 : 4,
-    paddingTop: 8,
-    height: 60 + insets.bottom,
+    paddingBottom: insets.bottom > 0 ? 8 : 8,
+    paddingTop: 6,
+    height: 70 + insets.bottom,
   };
 
   if (Platform.OS === 'web') {
@@ -36,13 +36,15 @@ export default function TabLayout() {
         tabBarStyle,
         tabBarActiveTintColor: '#7B2D8E',
         tabBarInactiveTintColor: muted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '500' },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '500', marginTop: 2 },
+        tabBarHideOnKeyboard: true,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: '首页',
+          tabBarLabel: '首页',
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="house" size={18} color={color} />
           ),
@@ -52,6 +54,7 @@ export default function TabLayout() {
         name="search"
         options={{
           title: '检索',
+          tabBarLabel: '检索',
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="magnifying-glass" size={18} color={color} />
           ),
@@ -61,6 +64,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: '学情',
+          tabBarLabel: '学情',
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="chart-line" size={18} color={color} />
           ),
@@ -70,6 +74,7 @@ export default function TabLayout() {
         name="chat"
         options={{
           title: '知途',
+          tabBarLabel: '知途',
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="comments" size={18} color={color} />
           ),
