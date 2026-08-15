@@ -166,8 +166,13 @@ export default function QuestionEntryScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>错题录入</Text>
-          <Text style={styles.headerSub}>拍照或输入题目，AI帮你分析整理</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <FontAwesome6 name="arrow-left" size={20} color="#7B2D8E" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>错题录入</Text>
+            <Text style={styles.headerSub}>拍照或输入题目，AI帮你分析整理</Text>
+          </View>
         </View>
 
         {step === 'input' && (
@@ -295,7 +300,8 @@ export default function QuestionEntryScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 16 },
-  header: { marginBottom: 20 },
+  header: { marginBottom: 20, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', marginTop: 2 },
   headerTitle: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
   headerSub: { fontSize: 14, color: '#6B7280', marginTop: 4 },
   section: { marginBottom: 16 },

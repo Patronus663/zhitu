@@ -50,8 +50,15 @@ export default function PlanCreateScreen() {
   return (
     <Screen backgroundColor="#FAFAF8">
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>制定学习计划</Text>
-        <Text style={styles.subtitle}>AI结合你的学情，为你定制专属学习计划</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <FontAwesome6 name="arrow-left" size={20} color="#7B2D8E" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>制定学习计划</Text>
+            <Text style={styles.subtitle}>AI结合你的学情，为你定制专属学习计划</Text>
+          </View>
+        </View>
 
         {!generatedPlan ? (
           <>
@@ -138,8 +145,10 @@ export default function PlanCreateScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 16 },
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 20 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', marginTop: 2 },
   title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
+  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 0 },
   field: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
   textArea: { backgroundColor: '#FFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A2E', borderWidth: 1, borderColor: '#E5E7EB', minHeight: 100 },
