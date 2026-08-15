@@ -201,6 +201,37 @@ export const planApi = {
    */
   completeItem: (itemId: string, isCompleted: boolean) =>
     request<any>(`/api/v1/plans/items/${itemId}/complete`, { method: 'PUT', body: JSON.stringify({ is_completed: isCompleted }) }),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：GET /api/v1/plans/items/:item_id
+   * Path 参数：item_id: string
+   * 返回：{ item: { id, title, description, due_date, is_completed, ... } }
+   */
+  getItem: (itemId: string) =>
+    request<{ item: any }>(`/api/v1/plans/items/${itemId}`),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：PUT /api/v1/plans/items/:item_id
+   * Path 参数：item_id: string
+   * Body 参数：title?: string, description?: string, due_date?: string
+   */
+  updateItem: (itemId: string, data: { title?: string; description?: string; due_date?: string }) =>
+    request<any>(`/api/v1/plans/items/${itemId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：DELETE /api/v1/plans/items/:item_id
+   * Path 参数：item_id: string
+   */
+  deleteItem: (itemId: string) =>
+    request<any>(`/api/v1/plans/items/${itemId}`, { method: 'DELETE' }),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：POST /api/v1/plans/items/:item_id/move
+   * Path 参数：item_id: string
+   * Body 参数：new_due_date: string
+   */
+  moveItem: (itemId: string, newDueDate: string) =>
+    request<any>(`/api/v1/plans/items/${itemId}/move`, { method: 'POST', body: JSON.stringify({ new_due_date: newDueDate }) }),
 };
 
 // Chat APIs

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
@@ -16,6 +16,10 @@ export default function HomeScreen() {
   const [weekItems, setWeekItems] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, completed: 0 });
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [moveModalVisible, setMoveModalVisible] = useState(false);
+  const [moveDate, setMoveDate] = useState('');
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -44,6 +48,45 @@ export default function HomeScreen() {
     } catch {
       alert('更新失败');
     }
+  };
+
+  const handleMenuAction = (action: string) => {
+    setMenuVisible(false);
+    if (!selectedItem) return;
+
+    if (action === 'edit') {
+      router.push(`/task-detail`, { itemId: selectedItem.id });
+    } else if (action === 'delete') {
+      handleDelete(selectedItem.id);
+    } else if (action === 'move') {
+      setMoveDate(selectedItem.due_date || '');
+      setMoveModalVisible(true);
+    }
+  };
+
+  const handleDelete = async (itemId: string) => {
+    try {
+      await planApi.deleteItem(itemId);
+      await loadData();
+    } catch {
+      alert('删除失败');
+    }
+  };
+
+  const handleMove = async () => {
+    if (!selectedItem || !moveDate) return;
+    try {
+      await planApi.moveItem(selectedItem.id, moveDate);
+      setMoveModalVisible(false);
+      await loadData();
+    } catch {
+      alert('移动失败');
+    }
+  };
+
+  const openMenu = (item: any) => {
+    setSelectedItem(item);
+    setMenuVisible(true);
   };
 
   const progress = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -98,23 +141,31 @@ export default function HomeScreen() {
             </View>
           ) : (
             todayItems.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.taskCard}
-                onPress={() => handleComplete(item.id, item.is_completed)}
-              >
-                <View style={[styles.checkbox, item.is_completed && styles.checkboxDone]}>
-                  {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
-                </View>
-                <View style={styles.taskContent}>
+              <View key={item.id} style={styles.taskCard}>
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={() => handleComplete(item.id, item.is_completed)}
+                >
+                  <View style={[styles.checkboxInner, item.is_completed && styles.checkboxDone]}>
+                    {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.taskContent}
+                  onPress={() => router.push('/task-detail', { itemId: item.id })}
+                  activeOpacity={0.7}
+                >
                   <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
                     {item.title}
                   </Text>
                   {item.description ? (
                     <Text style={styles.taskDesc} numberOfLines={1}>{item.description}</Text>
                   ) : null}
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuBtn} onPress={() => openMenu(item)}>
+                  <FontAwesome6 name="ellipsis-vertical" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
             ))
           )}
         </View>
@@ -133,21 +184,29 @@ export default function HomeScreen() {
             </View>
           ) : (
             weekItems.slice(0, 5).map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.taskCard}
-                onPress={() => handleComplete(item.id, item.is_completed)}
-              >
-                <View style={[styles.checkbox, item.is_completed && styles.checkboxDone]}>
-                  {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
-                </View>
-                <View style={styles.taskContent}>
+              <View key={item.id} style={styles.taskCard}>
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={() => handleComplete(item.id, item.is_completed)}
+                >
+                  <View style={[styles.checkboxInner, item.is_completed && styles.checkboxDone]}>
+                    {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.taskContent}
+                  onPress={() => router.push('/task-detail', { itemId: item.id })}
+                  activeOpacity={0.7}
+                >
                   <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
                     {item.title}
                   </Text>
                   <Text style={styles.taskDate}>{item.due_date}</Text>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuBtn} onPress={() => openMenu(item)}>
+                  <FontAwesome6 name="ellipsis-vertical" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              </View>
             ))
           )}
         </View>
@@ -183,6 +242,60 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Task Menu Modal */}
+      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMenuVisible(false)}>
+          <View style={styles.menuContent}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('edit')}>
+              <FontAwesome6 name="pen" size={16} color="#374151" />
+              <Text style={styles.menuItemText}>编辑任务</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('move')}>
+              <FontAwesome6 name="calendar-days" size={16} color="#374151" />
+              <Text style={styles.menuItemText}>延后/移动日期</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity style={styles.menuItemDanger} onPress={() => handleMenuAction('delete')}>
+              <FontAwesome6 name="trash" size={16} color="#DC2626" />
+              <Text style={styles.menuItemDangerText}>删除任务</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Move Date Modal */}
+      <Modal visible={moveModalVisible} transparent animationType="slide" onRequestClose={() => setMoveModalVisible(false)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMoveModalVisible(false)}>
+          <View style={styles.moveModal}>
+            <Text style={styles.moveTitle}>选择新日期</Text>
+            <View style={styles.quickDates}>
+              {[1, 3, 7].map((days) => {
+                const d = new Date(Date.now() + days * 86400000);
+                const dateStr = d.toISOString().split('T')[0];
+                return (
+                  <TouchableOpacity
+                    key={days}
+                    style={styles.quickDateBtn}
+                    onPress={() => setMoveDate(dateStr)}
+                  >
+                    <Text style={styles.quickDateText}>+{days}天</Text>
+                    <Text style={styles.quickDateSub}>{dateStr}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={styles.moveActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setMoveModalVisible(false)}>
+                <Text style={styles.cancelBtnText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleMove}>
+                <Text style={styles.saveBtnText}>确认移动</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </Screen>
   );
 }
@@ -208,15 +321,35 @@ const styles = StyleSheet.create({
   emptyCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8 },
   emptyText: { color: '#9CA3AF', fontSize: 14 },
   taskCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 14, padding: 14, marginBottom: 8, gap: 12 },
-  checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' },
+  checkbox: { padding: 4 },
+  checkboxInner: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' },
   checkboxDone: { backgroundColor: '#7B2D8E', borderColor: '#7B2D8E' },
   taskContent: { flex: 1 },
   taskTitle: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
   taskTitleDone: { color: '#9CA3AF', textDecorationLine: 'line-through' },
   taskDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
   taskDate: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  menuBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   quickCard: { flex: 1, minWidth: '45%', backgroundColor: '#FFF', borderRadius: 16, padding: 16, alignItems: 'center', gap: 8 },
   quickIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   quickLabel: { fontSize: 13, fontWeight: '500', color: '#374151' },
+  menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' },
+  menuContent: { backgroundColor: '#FFF', borderRadius: 16, width: 240, overflow: 'hidden' },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { fontSize: 15, color: '#374151' },
+  menuItemDanger: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemDangerText: { fontSize: 15, color: '#DC2626' },
+  menuDivider: { height: 1, backgroundColor: '#F3F4F6' },
+  moveModal: { backgroundColor: '#FFF', borderRadius: 20, width: 320, padding: 24 },
+  moveTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E', marginBottom: 16, textAlign: 'center' },
+  quickDates: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  quickDateBtn: { flex: 1, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12, alignItems: 'center' },
+  quickDateText: { fontSize: 14, fontWeight: '600', color: '#7B2D8E' },
+  quickDateSub: { fontSize: 11, color: '#9CA3AF', marginTop: 4 },
+  moveActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  cancelBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
+  cancelBtnText: { color: '#6B7280', fontSize: 14 },
+  saveBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: '#7B2D8E' },
+  saveBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
 });

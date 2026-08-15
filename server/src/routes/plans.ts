@@ -206,6 +206,81 @@ router.put('/items/:item_id/complete', async (req, res) => {
   }
 });
 
+// GET /api/v1/plans/items/:item_id - Get single item detail
+router.get('/items/:item_id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from('plan_items')
+      .select('*, study_plans(title, user_id)')
+      .eq('id', req.params.item_id)
+      .single();
+    if (error) throw new Error(`查询失败: ${error.message}`);
+    res.json({ item: data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/v1/plans/items/:item_id - Update item
+router.put('/items/:item_id', async (req, res) => {
+  try {
+    const { title, description, due_date, sort_order } = req.body;
+    const client = getSupabaseClient();
+
+    const updateData: Record<string, any> = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (due_date !== undefined) updateData.due_date = due_date;
+    if (sort_order !== undefined) updateData.sort_order = sort_order;
+
+    const { data, error } = await client
+      .from('plan_items')
+      .update(updateData)
+      .eq('id', req.params.item_id)
+      .select()
+      .single();
+    if (error) throw new Error(`更新失败: ${error.message}`);
+    res.json({ item: data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/v1/plans/items/:item_id - Delete item
+router.delete('/items/:item_id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { error } = await client
+      .from('plan_items')
+      .delete()
+      .eq('id', req.params.item_id);
+    if (error) throw new Error(`删除失败: ${error.message}`);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/v1/plans/items/:item_id/move - Move item to another date
+router.post('/items/:item_id/move', async (req, res) => {
+  try {
+    const { new_due_date } = req.body;
+    const client = getSupabaseClient();
+
+    const { data, error } = await client
+      .from('plan_items')
+      .update({ due_date: new_due_date })
+      .eq('id', req.params.item_id)
+      .select()
+      .single();
+    if (error) throw new Error(`移动失败: ${error.message}`);
+    res.json({ item: data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/v1/plans/:user_id/today - Get today's and this week's tasks
 router.get('/:user_id/today', async (req, res) => {
   try {
