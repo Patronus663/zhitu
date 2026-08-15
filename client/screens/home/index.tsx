@@ -42,10 +42,34 @@ export default function HomeScreen() {
   };
 
   const handleComplete = async (itemId: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+    // Optimistic update: update UI immediately
+    setTodayItems(prev => prev.map(item =>
+      item.id === itemId ? { ...item, is_completed: newStatus } : item
+    ));
+    setWeekItems(prev => prev.map(item =>
+      item.id === itemId ? { ...item, is_completed: newStatus } : item
+    ));
+    // Update stats: total stays the same, completed changes
+    setStats(prev => ({
+      total: prev.total,
+      completed: newStatus ? prev.completed + 1 : Math.max(0, prev.completed - 1),
+    }));
+
     try {
-      await planApi.completeItem(itemId, !currentStatus);
-      await loadData();
+      await planApi.completeItem(itemId, newStatus);
     } catch {
+      // Revert on error
+      setTodayItems(prev => prev.map(item =>
+        item.id === itemId ? { ...item, is_completed: currentStatus } : item
+      ));
+      setWeekItems(prev => prev.map(item =>
+        item.id === itemId ? { ...item, is_completed: currentStatus } : item
+      ));
+      setStats(prev => ({
+        total: prev.total,
+        completed: newStatus ? Math.max(0, prev.completed - 1) : prev.completed + 1,
+      }));
       alert('更新失败');
     }
   };
