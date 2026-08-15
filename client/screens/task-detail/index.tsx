@@ -57,23 +57,23 @@ export default function TaskDetailScreen() {
     }
   };
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const handleDelete = async () => {
     if (!item) return;
-    Alert.alert('确认删除', '确定要删除这个任务吗？', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '删除',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await planApi.deleteItem(item.id);
-            router.back();
-          } catch {
-            Alert.alert('错误', '删除失败');
-          }
-        },
-      },
-    ]);
+    setShowMenu(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!item) return;
+    setShowDeleteConfirm(false);
+    try {
+      await planApi.deleteItem(item.id);
+      router.back();
+    } catch {
+      alert('删除失败');
+    }
   };
 
   const handleMove = async () => {
@@ -240,6 +240,25 @@ export default function TaskDetailScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteConfirm} transparent animationType="fade" onRequestClose={() => setShowDeleteConfirm(false)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowDeleteConfirm(false)}>
+          <View style={styles.deleteModal}>
+            <FontAwesome6 name="trash" size={32} color="#DC2626" style={{ marginBottom: 12 }} />
+            <Text style={styles.deleteTitle}>确认删除</Text>
+            <Text style={styles.deleteDesc}>确定要删除这个任务吗？此操作不可撤销。</Text>
+            <View style={styles.deleteActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowDeleteConfirm(false)}>
+                <Text style={styles.cancelBtnText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.deleteBtn} onPress={confirmDelete}>
+                <Text style={styles.deleteBtnText}>删除</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </Screen>
   );
 }
@@ -287,4 +306,10 @@ const styles = StyleSheet.create({
   moveTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E', marginBottom: 16, textAlign: 'center' },
   moveDateInput: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A2E', marginBottom: 16 },
   moveActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  deleteModal: { backgroundColor: '#FFF', borderRadius: 20, width: 280, padding: 24, alignItems: 'center' },
+  deleteTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E', marginBottom: 8 },
+  deleteDesc: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 20 },
+  deleteActions: { flexDirection: 'row', justifyContent: 'center', gap: 16 },
+  deleteBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: '#DC2626' },
+  deleteBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
 });
