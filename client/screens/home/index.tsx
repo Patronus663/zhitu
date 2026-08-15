@@ -26,6 +26,9 @@ export default function HomeScreen() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDesc, setNewTaskDesc] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
+  // Hide completed state
+  const [hideTodayCompleted, setHideTodayCompleted] = useState(false);
+  const [hideWeekCompleted, setHideWeekCompleted] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -204,9 +207,23 @@ export default function HomeScreen() {
                 <Text style={styles.sectionBadge}>{todayItems.length}</Text>
               )}
             </View>
-            <TouchableOpacity style={styles.addBtn} onPress={() => openAddModal('today')}>
-              <FontAwesome6 name="plus" size={16} color="#7B2D8E" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {todayItems.some(i => i.is_completed) && (
+                <TouchableOpacity
+                  style={styles.hideBtn}
+                  onPress={() => setHideTodayCompleted(!hideTodayCompleted)}
+                >
+                  <FontAwesome6
+                    name={hideTodayCompleted ? 'eye' : 'eye-slash'}
+                    size={14}
+                    color={hideTodayCompleted ? '#7B2D8E' : '#9CA3AF'}
+                  />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.addBtn} onPress={() => openAddModal('today')}>
+                <FontAwesome6 name="plus" size={16} color="#7B2D8E" />
+              </TouchableOpacity>
+            </View>
           </View>
           {todayItems.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -214,7 +231,7 @@ export default function HomeScreen() {
               <Text style={styles.emptyText}>今日暂无待完成任务</Text>
             </View>
           ) : (
-            todayItems.map((item) => (
+            (hideTodayCompleted ? todayItems.filter(i => !i.is_completed) : todayItems).map((item) => (
               <View key={item.id} style={styles.taskCard}>
                 <TouchableOpacity
                   style={styles.checkbox}
@@ -253,16 +270,30 @@ export default function HomeScreen() {
                 <Text style={styles.sectionBadge}>{weekItems.length}</Text>
               )}
             </View>
-            <TouchableOpacity style={styles.addBtn} onPress={() => openAddModal('week')}>
-              <FontAwesome6 name="plus" size={16} color="#7B2D8E" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {weekItems.some(i => i.is_completed) && (
+                <TouchableOpacity
+                  style={styles.hideBtn}
+                  onPress={() => setHideWeekCompleted(!hideWeekCompleted)}
+                >
+                  <FontAwesome6
+                    name={hideWeekCompleted ? 'eye' : 'eye-slash'}
+                    size={14}
+                    color={hideWeekCompleted ? '#7B2D8E' : '#9CA3AF'}
+                  />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.addBtn} onPress={() => openAddModal('week')}>
+                <FontAwesome6 name="plus" size={16} color="#7B2D8E" />
+              </TouchableOpacity>
+            </View>
           </View>
           {weekItems.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>本周暂无更多任务</Text>
             </View>
           ) : (
-            weekItems.slice(0, 5).map((item) => (
+            (hideWeekCompleted ? weekItems.filter(i => !i.is_completed) : weekItems).slice(0, 5).map((item) => (
               <View key={item.id} style={styles.taskCard}>
                 <TouchableOpacity
                   style={styles.checkbox}
@@ -484,6 +515,7 @@ const styles = StyleSheet.create({
   saveBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
   // Add button and modal styles
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center' },
+  hideBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' },
   addModal: { backgroundColor: '#FFF', borderRadius: 20, width: 340, padding: 24 },
   addModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   addModalTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E' },
