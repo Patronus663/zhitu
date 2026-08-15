@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
@@ -8,72 +8,237 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { planApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
 
+
+interface PlanItem {
+  id: string;
+  title: string;
+  description: string;
+  due_date: string;
+  is_completed: boolean;
+}
+
+// Task card component defined outside to avoid re-creation on each render
+const TaskCard = ({
+  item,
+  onComplete,
+  onNavigate,
+  onPostpone,
+  onDelete,
+}: {
+  item: PlanItem;
+  onComplete: (id: string, current: boolean) => void;
+  onNavigate: (id: string) => void;
+  onPostpone: (id: string, days: number) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  return (
+    <View style={styles.taskCard}>
+      {/* Checkbox - separate touch target */}
+      <TouchableOpacity
+        style={styles.checkboxWrap}
+        onPress={() => onComplete(item.id, item.is_completed)}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <View style={[styles.checkbox, item.is_completed && styles.checkboxDone]}>
+          {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
+        </View>
+      </TouchableOpacity>
+
+      {/* Card body - navigates to detail */}
+      <TouchableOpacity
+        style={styles.taskContent}
+        onPress={() => onNavigate(item.id)}
+        activeOpacity={0.7}
+      >
+        <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
+          {item.title}
+        </Text>
+        {item.description ? (
+          <Text style={styles.taskDesc} numberOfLines={1}>{item.description}</Text>
+        ) : null}
+        {item.due_date && (
+          <Text style={styles.taskDate}>{item.due_date}</Text>
+        )}
+      </TouchableOpacity>
+
+      {/* Three-dot menu */}
+      <TouchableOpacity
+        style={styles.menuBtn}
+        onPress={() => setMenuVisible(true)}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <FontAwesome6 name="ellipsis-vertical" size={16} color="#9CA3AF" />
+      </TouchableOpacity>
+
+      {/* Action Menu Modal */}
+      <Modal visible={menuVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setMenuVisible(false)}
+        >
+          <View style={styles.menuPopup}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => { setMenuVisible(false); onNavigate(item.id); }}
+            >
+              <FontAwesome6 name="eye" size={14} color="#374151" />
+              <Text style={styles.menuItemText}>查看详情</Text>
+            </TouchableOpacity>
+            {!item.is_completed && (
+              <>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => { setMenuVisible(false); onPostpone(item.id, 1); }}
+                >
+                  <FontAwesome6 name="clock" size={14} color="#D97706" />
+                  <Text style={styles.menuItemText}>延后1天</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => { setMenuVisible(false); onPostpone(item.id, 3); }}
+                >
+                  <FontAwesome6 name="clock" size={14} color="#D97706" />
+                  <Text style={styles.menuItemText}>延后3天</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => { setMenuVisible(false); onPostpone(item.id, 7); }}
+                >
+                  <FontAwesome6 name="calendar-plus" size={14} color="#2563EB" />
+                  <Text style={styles.menuItemText}>延后1周</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <View style={styles.menuDivider} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                Alert.alert('确认删除', '确定要删除这个任务吗？', [
+                  { text: '取消', style: 'cancel' },
+                  { text: '删除', style: 'destructive', onPress: () => onDelete(item.id) },
+                ]);
+              }}
+            >
+              <FontAwesome6 name="trash" size={14} color="#DC2626" />
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>删除任务</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
+  );
+};
+
+
 export default function HomeScreen() {
-  const { user } = useUser();
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
-  const [todayItems, setTodayItems] = useState<any[]>([]);
-  const [weekItems, setWeekItems] = useState<any[]>([]);
+  const { user } = useUser();
+
+  const [todayItems, setTodayItems] = useState<PlanItem[]>([]);
+  const [weekItems, setWeekItems] = useState<PlanItem[]>([]);
   const [stats, setStats] = useState({ total: 0, completed: 0 });
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = useCallback(async () => {
-    if (!user) return;
+  useFocusEffect(useCallback(() => {
+    const fetchPlans = async () => {
+      if (!user?.id) return;
+      try {
+        const result = await planApi.getToday(user.id);
+        setTodayItems(result.today_items || []);
+        setWeekItems(result.week_items || []);
+        if (result.stats) setStats(result.stats);
+      } catch (err) {
+        console.error('Failed to fetch plans:', err);
+      }
+    };
+    fetchPlans();
+  }, [user]));
+
+  const refreshData = async () => {
+    if (!user?.id) return;
     try {
       const result = await planApi.getToday(user.id);
       setTodayItems(result.today_items || []);
       setWeekItems(result.week_items || []);
-      setStats(result.stats || { total: 0, completed: 0 });
-    } catch {
-      // Silent fail
+      if (result.stats) setStats(result.stats);
+    } catch (err) {
+      console.error('Failed to fetch plans:', err);
     }
-  }, [user]);
-
-  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await refreshData();
     setRefreshing(false);
   };
 
   const handleComplete = async (itemId: string, currentStatus: boolean) => {
     try {
       await planApi.completeItem(itemId, !currentStatus);
-      await loadData();
-    } catch {
-      alert('更新失败');
+      await refreshData();
+    } catch (err) {
+      Alert.alert('错误', '操作失败，请重试');
+    }
+  };
+
+  const handleNavigate = (itemId: string) => {
+    router.push('/task-detail', { itemId });
+  };
+
+  const handlePostpone = async (itemId: string, days: number) => {
+    try {
+      const item = [...todayItems, ...weekItems].find(i => i.id === itemId);
+      if (!item?.due_date) return;
+      const current = new Date(item.due_date);
+      current.setDate(current.getDate() + days);
+      const newDate = current.toISOString().split('T')[0];
+      await planApi.rescheduleItem(itemId, newDate);
+      await refreshData();
+    } catch (err) {
+      Alert.alert('错误', '操作失败，请重试');
+    }
+  };
+
+  const handleDelete = async (itemId: string) => {
+    try {
+      await planApi.deleteItem(itemId);
+      await refreshData();
+    } catch (err) {
+      Alert.alert('错误', '删除失败，请重试');
     }
   };
 
   const progress = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
-  const today = new Date();
-  const dateStr = `${today.getMonth() + 1}月${today.getDate()}日`;
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-  const dayStr = `星期${weekDays[today.getDay()]}`;
+  const displayName = user?.nickname || '同学';
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <Screen safeAreaEdges={['left', 'right']} backgroundColor="#FAFAF8">
+    <Screen>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
-              <Text style={styles.userName}>你好，{user?.nickname || '同学'}</Text>
+              <Text style={styles.greeting}>你好，{displayName}</Text>
+              <Text style={styles.userName}>今日学习进度</Text>
             </View>
-            <TouchableOpacity style={styles.avatarBtn} onPress={() => router.push('/profile')}>
-              <Text style={styles.avatarText}>{(user?.nickname || '同')[0]}</Text>
+            <TouchableOpacity style={styles.avatarBtn} onPress={() => router.navigate('/profile')}>
+              <Text style={styles.avatarText}>{initial}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Progress Card */}
           <View style={styles.progressCard}>
             <View style={styles.progressInfo}>
-              <Text style={styles.progressTitle}>今日计划进度</Text>
+              <Text style={styles.progressTitle}>完成进度</Text>
               <Text style={styles.progressPercent}>{progress}%</Text>
             </View>
             <View style={styles.progressBar}>
@@ -98,23 +263,14 @@ export default function HomeScreen() {
             </View>
           ) : (
             todayItems.map((item) => (
-              <TouchableOpacity
+              <TaskCard
                 key={item.id}
-                style={styles.taskCard}
-                onPress={() => handleComplete(item.id, item.is_completed)}
-              >
-                <View style={[styles.checkbox, item.is_completed && styles.checkboxDone]}>
-                  {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
-                </View>
-                <View style={styles.taskContent}>
-                  <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
-                    {item.title}
-                  </Text>
-                  {item.description ? (
-                    <Text style={styles.taskDesc} numberOfLines={1}>{item.description}</Text>
-                  ) : null}
-                </View>
-              </TouchableOpacity>
+                item={item}
+                onComplete={handleComplete}
+                onNavigate={handleNavigate}
+                onPostpone={handlePostpone}
+                onDelete={handleDelete}
+              />
             ))
           )}
         </View>
@@ -133,21 +289,14 @@ export default function HomeScreen() {
             </View>
           ) : (
             weekItems.slice(0, 5).map((item) => (
-              <TouchableOpacity
+              <TaskCard
                 key={item.id}
-                style={styles.taskCard}
-                onPress={() => handleComplete(item.id, item.is_completed)}
-              >
-                <View style={[styles.checkbox, item.is_completed && styles.checkboxDone]}>
-                  {item.is_completed && <FontAwesome6 name="check" size={12} color="#FFF" />}
-                </View>
-                <View style={styles.taskContent}>
-                  <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.taskDate}>{item.due_date}</Text>
-                </View>
-              </TouchableOpacity>
+                item={item}
+                onComplete={handleComplete}
+                onNavigate={handleNavigate}
+                onPostpone={handlePostpone}
+                onDelete={handleDelete}
+              />
             ))
           )}
         </View>
@@ -207,7 +356,10 @@ const styles = StyleSheet.create({
   sectionBadge: { backgroundColor: '#7B2D8E', color: '#FFF', fontSize: 11, fontWeight: '600', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   emptyCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8 },
   emptyText: { color: '#9CA3AF', fontSize: 14 },
-  taskCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 14, padding: 14, marginBottom: 8, gap: 12 },
+
+  // Task card styles
+  taskCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 14, padding: 14, marginBottom: 8, gap: 10 },
+  checkboxWrap: { padding: 2 },
   checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' },
   checkboxDone: { backgroundColor: '#7B2D8E', borderColor: '#7B2D8E' },
   taskContent: { flex: 1 },
@@ -215,6 +367,15 @@ const styles = StyleSheet.create({
   taskTitleDone: { color: '#9CA3AF', textDecorationLine: 'line-through' },
   taskDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
   taskDate: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  menuBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 8 },
+
+  // Menu popup styles
+  menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' },
+  menuPopup: { backgroundColor: '#FFF', borderRadius: 16, padding: 8, minWidth: 180, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 10 },
+  menuItemText: { fontSize: 14, color: '#374151', fontWeight: '500' },
+  menuDivider: { height: 1, backgroundColor: '#F3F4F6', marginVertical: 4 },
+
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   quickCard: { flex: 1, minWidth: '45%', backgroundColor: '#FFF', borderRadius: 16, padding: 16, alignItems: 'center', gap: 8 },
   quickIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },

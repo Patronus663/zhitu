@@ -26,6 +26,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="question-entry" />
         <Stack.Screen name="plan-create" />
+      <Stack.Screen name="task-detail" />
       </Stack>
       <Toast />
     </Provider>
