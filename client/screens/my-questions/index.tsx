@@ -89,7 +89,7 @@ export default function MyQuestionsScreen() {
     ));
   };
 
-  const handleDeleteQuestion = async (questionId: string) => {
+  const handleDeleteQuestion = async (question: any) => {
     setMenuVisible(false);
     Alert.alert(
       '确认删除',
@@ -101,8 +101,8 @@ export default function MyQuestionsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await questionApi.deleteQuestion(questionId);
-              setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+              await questionApi.deleteQuestion(question.question_id);
+              setQuestions((prev) => prev.filter((q) => q.id !== question.id));
             } catch {
               Alert.alert('错误', '删除失败，请重试');
             }
