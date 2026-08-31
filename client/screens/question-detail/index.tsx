@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: '#111827',
     fontWeight: '600',
   },
   methodBadge: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   methodText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: '#111827',
     fontWeight: '600',
   },
   typeText: {
