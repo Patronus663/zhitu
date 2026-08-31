@@ -9,6 +9,7 @@ import { questionApi } from '@/utils/api';
 
 interface Question {
   id: string;
+  user_question_id: string;
   content: string;
   answer: string;
   subject: string;
@@ -101,8 +102,11 @@ export default function MyQuestionsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await questionApi.deleteQuestion(question.question_id);
-              setQuestions((prev) => prev.filter((q) => q.id !== question.id));
+              // question.id is the question ID (from flattened structure)
+              // question.user_question_id is the user_question record ID
+              await questionApi.deleteQuestion(question.id);
+              // Filter by user_question_id since that's what's in the list
+              setQuestions((prev) => prev.filter((q) => q.user_question_id !== question.user_question_id));
             } catch {
               Alert.alert('错误', '删除失败，请重试');
             }
