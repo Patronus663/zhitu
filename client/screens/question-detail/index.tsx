@@ -256,13 +256,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: '#FFFFFF',
     marginBottom: 8,
-    backgroundColor: '#E5E7EB',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    overflow: 'hidden',
   },
   questionBox: {
     backgroundColor: '#FFFFFF',
@@ -327,7 +322,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 14,
-    color: '#111827',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   methodBadge: {
@@ -335,27 +330,17 @@ const styles = StyleSheet.create({
   },
   methodText: {
     fontSize: 14,
-    color: '#4C1D95',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   typeText: {
     fontSize: 16,
-    color: '#111827',
+    color: '#FFFFFF',
     fontWeight: '600',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
   },
   dateText: {
     fontSize: 15,
-    color: '#111827',
-    fontWeight: '600',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
 });
