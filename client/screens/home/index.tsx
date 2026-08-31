@@ -331,6 +331,12 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.quickLabel}>录入错题</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.quickCard} onPress={() => router.push('/my-questions')}>
+              <View style={[styles.quickIcon, { backgroundColor: '#FEE2E2' }]}>
+                <FontAwesome6 name="book" size={20} color="#DC2626" />
+              </View>
+              <Text style={styles.quickLabel}>我的错题</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.quickCard} onPress={() => router.push('/search')}>
               <View style={[styles.quickIcon, { backgroundColor: '#FEF3C7' }]}>
                 <FontAwesome6 name="magnifying-glass" size={20} color="#D97706" />

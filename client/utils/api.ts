@@ -92,6 +92,16 @@ export const questionApi = {
    */
   create: (data: any) =>
     request<any>('/api/v1/questions', { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：GET /api/v1/questions?user_id={user_id}
+   * Query 参数：user_id: string
+   * 返回：{ questions: any[] }
+   */
+  getMyQuestions: async (userId: string) => {
+    const result = await request<{ questions: any[] }>(`/api/v1/questions?user_id=${userId}`);
+    return result.questions || [];
+  },
 };
 
 // Search APIs
