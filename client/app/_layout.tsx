@@ -28,6 +28,7 @@ export default function RootLayout() {
         <Stack.Screen name="plan-create" />
         <Stack.Screen name="task-detail" />
         <Stack.Screen name="my-questions" />
+        <Stack.Screen name="question-detail" />
       </Stack>
       <Toast />
     </Provider>

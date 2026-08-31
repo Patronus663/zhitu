@@ -110,6 +110,15 @@ export const questionApi = {
       created_at: item.created_at,
     }));
   },
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：GET /api/v1/questions/:id
+   * Path 参数：id: string
+   */
+  getQuestionDetail: async (questionId: string) => {
+    const result = await request<{ question: any }>(`/api/v1/questions/${questionId}`);
+    return result.question;
+  },
 };
 
 // Search APIs

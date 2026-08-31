@@ -80,7 +80,11 @@ export default function MyQuestionsScreen() {
   };
 
   const renderQuestionCard = ({ item }: { item: Question }) => (
-    <View style={styles.questionCard}>
+    <TouchableOpacity
+      style={styles.questionCard}
+      onPress={() => router.push('/question-detail', { questionId: item.id })}
+      activeOpacity={0.7}
+    >
       <View style={styles.cardHeader}>
         <View style={[styles.subjectBadge, { backgroundColor: getSubjectColor(item.subject) + '20' }]}>
           <Text style={[styles.subjectText, { color: getSubjectColor(item.subject) }]}>
@@ -114,7 +118,7 @@ export default function MyQuestionsScreen() {
           ))}
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 
   const renderEmptyState = () => (
