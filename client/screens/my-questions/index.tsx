@@ -58,7 +58,8 @@ export default function MyQuestionsScreen() {
     ? questions
     : questions.filter(q => q.subject === selectedSubject);
 
-  const subjectFilters = ['全部', '数学', '物理'];
+  // Dynamically generate subject filters based on questions
+  const subjectFilters = ['全部', ...Array.from(new Set(questions.map(q => q.subject).filter(Boolean)))];
 
   const getSubjectColor = (subject: string) => {
     const colors: Record<string, string> = {
