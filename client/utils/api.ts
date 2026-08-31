@@ -100,7 +100,15 @@ export const questionApi = {
    */
   getMyQuestions: async (userId: string) => {
     const result = await request<{ questions: any[] }>(`/api/v1/questions?user_id=${userId}`);
-    return result.questions || [];
+    // Flatten the nested structure: each item has a nested 'questions' object with the actual data
+    return (result.questions || []).map((item: any) => ({
+      ...item.questions,
+      wrong_answer: item.wrong_answer,
+      error_analysis: item.error_analysis,
+      is_mastered: item.is_mastered,
+      user_question_id: item.id,
+      created_at: item.created_at,
+    }));
   },
 };
 
