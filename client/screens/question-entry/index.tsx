@@ -19,6 +19,7 @@ export default function QuestionEntryScreen() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [tags, setTags] = useState({ subject: '', question_type: '', knowledge_points: [] as string[], methods: [] as string[], difficulty: 3 });
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [kpInput, setKpInput] = useState('');
   const [aiResult, setAiResult] = useState<any>(null);
   const [showAiAnswer, setShowAiAnswer] = useState(false);
@@ -94,7 +95,7 @@ export default function QuestionEntryScreen() {
       Alert.alert('提示', '请先输入题目内容');
       return;
     }
-    setLoading(true);
+    setAiLoading(true);
     try {
       const result = await questionApi.aiAnswer({ content, wrong_answer: wrongAnswer || undefined });
       setAiResult(result.ai_result);
@@ -115,7 +116,7 @@ export default function QuestionEntryScreen() {
     } catch {
       Alert.alert('AI解答失败', '请重试');
     } finally {
-      setLoading(false);
+      setAiLoading(false);
     }
   };
 
@@ -299,8 +300,8 @@ export default function QuestionEntryScreen() {
 
             {/* Two Main Action Buttons */}
             <View style={styles.mainActionBtns}>
-              <TouchableOpacity style={styles.aiAnalyzeBtn} onPress={handleAiAnswer} disabled={loading}>
-                {loading ? <ActivityIndicator color="#7B2D8E" /> : (
+              <TouchableOpacity style={styles.aiAnalyzeBtn} onPress={handleAiAnswer} disabled={aiLoading}>
+                {aiLoading ? <ActivityIndicator color="#7B2D8E" /> : (
                   <>
                     <FontAwesome6 name="wand-magic-sparkles" size={18} color="#7B2D8E" />
                     <Text style={styles.aiAnalyzeBtnText}>AI 解答和分析</Text>
