@@ -119,6 +119,14 @@ export const questionApi = {
     const result = await request<{ question: any }>(`/api/v1/questions/${questionId}`);
     return result.question;
   },
+  /**
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：DELETE /api/v1/questions/:id
+   * Path 参数：id: string
+   */
+  deleteQuestion: async (questionId: string) => {
+    return request(`/api/v1/questions/${questionId}`, { method: 'DELETE' });
+  },
 };
 
 // Search APIs

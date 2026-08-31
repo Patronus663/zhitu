@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -72,6 +72,29 @@ export default function QuestionDetailScreen() {
     ));
   };
 
+  const handleDelete = () => {
+    if (!question) return;
+    Alert.alert(
+      '确认删除',
+      '确定要删除这道错题吗？此操作不可撤销。',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await questionApi.deleteQuestion(question.id);
+              router.back();
+            } catch {
+              Alert.alert('错误', '删除失败，请重试');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <Screen>
@@ -99,7 +122,9 @@ export default function QuestionDetailScreen() {
           <FontAwesome6 name="chevron-left" size={20} color="#374151" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>题目详情</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+          <FontAwesome6 name="trash" size={16} color="#DC2626" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -224,8 +249,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
   },
-  placeholder: {
+  deleteButton: {
     width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,

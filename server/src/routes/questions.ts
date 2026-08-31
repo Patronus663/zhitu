@@ -294,6 +294,32 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/v1/questions/:id - Delete a question
+router.delete('/:id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const questionId = req.params.id;
+
+    // First delete from user_questions
+    const { error: uqError } = await client
+      .from('user_questions')
+      .delete()
+      .eq('question_id', questionId);
+    if (uqError) throw new Error(`删除用户题目关联失败: ${uqError.message}`);
+
+    // Then delete from questions
+    const { error: qError } = await client
+      .from('questions')
+      .delete()
+      .eq('id', questionId);
+    if (qError) throw new Error(`删除题目失败: ${qError.message}`);
+
+    res.json({ success: true, message: '题目已删除' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/v1/questions/:id/rate - Rate a question
 router.post('/:id/rate', async (req, res) => {
   try {

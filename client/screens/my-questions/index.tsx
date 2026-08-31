@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -87,6 +87,28 @@ export default function MyQuestionsScreen() {
     ));
   };
 
+  const handleDeleteQuestion = async (questionId: string) => {
+    Alert.alert(
+      '确认删除',
+      '确定要删除这道错题吗？此操作不可撤销。',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await questionApi.deleteQuestion(questionId);
+              setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+            } catch {
+              Alert.alert('错误', '删除失败，请重试');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderQuestionCard = ({ item }: { item: Question }) => (
     <TouchableOpacity
       style={styles.questionCard}
@@ -112,9 +134,17 @@ export default function MyQuestionsScreen() {
         <View style={styles.typeBadge}>
           <Text style={styles.typeText}>{item.question_type}</Text>
         </View>
-        <Text style={styles.dateText}>
-          {new Date(item.created_at).toLocaleDateString('zh-CN')}
-        </Text>
+        <View style={styles.cardFooterRight}>
+          <Text style={styles.dateText}>
+            {new Date(item.created_at).toLocaleDateString('zh-CN')}
+          </Text>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteQuestion(item.id)}
+          >
+            <FontAwesome6 name="trash" size={14} color="#DC2626" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {item.knowledge_points && item.knowledge_points.length > 0 && (
@@ -349,6 +379,19 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 12,
     color: '#9CA3AF',
+  },
+  cardFooterRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tagsContainer: {
     flexDirection: 'row',
