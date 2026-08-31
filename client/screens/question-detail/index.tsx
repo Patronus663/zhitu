@@ -254,9 +254,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#374151',
+    color: '#111827',
     marginBottom: 8,
   },
   questionBox: {
@@ -321,25 +321,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tagText: {
-    fontSize: 13,
-    color: '#1F2937',
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
   },
   methodBadge: {
     backgroundColor: '#DDD6FE',
   },
   methodText: {
-    fontSize: 13,
-    color: '#5B21B6',
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#4C1D95',
+    fontWeight: '600',
   },
   typeText: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  dateText: {
     fontSize: 15,
     color: '#1F2937',
     fontWeight: '500',
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#4B5563',
   },
 });
