@@ -28,6 +28,7 @@ export default function MyQuestionsScreen() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string>('全部');
 
   const loadQuestions = useCallback(async () => {
     if (!user?.id) return;
@@ -52,6 +53,12 @@ export default function MyQuestionsScreen() {
     setRefreshing(true);
     loadQuestions();
   }, [loadQuestions]);
+
+  const filteredQuestions = selectedSubject === '全部'
+    ? questions
+    : questions.filter(q => q.subject === selectedSubject);
+
+  const subjectFilters = ['全部', '数学', '物理'];
 
   const getSubjectColor = (subject: string) => {
     const colors: Record<string, string> = {
@@ -169,8 +176,30 @@ export default function MyQuestionsScreen() {
         </View>
       </View>
 
+      <View style={styles.filterBar}>
+        {subjectFilters.map((subject) => (
+          <TouchableOpacity
+            key={subject}
+            style={[
+              styles.filterButton,
+              selectedSubject === subject && styles.filterButtonActive,
+            ]}
+            onPress={() => setSelectedSubject(subject)}
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                selectedSubject === subject && styles.filterButtonTextActive,
+              ]}
+            >
+              {subject}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <FlatList
-        data={questions}
+        data={filteredQuestions}
         renderItem={renderQuestionCard}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -240,6 +269,29 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: '#E5E7EB',
+  },
+  filterBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+  },
+  filterButtonActive: {
+    backgroundColor: '#7B2D8E',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  filterButtonTextActive: {
+    color: '#FFFFFF',
   },
   listContent: {
     paddingHorizontal: 20,
