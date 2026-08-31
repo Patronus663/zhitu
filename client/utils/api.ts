@@ -80,6 +80,13 @@ export const questionApi = {
     request<{ validation: any }>('/api/v1/questions/validate-tags', { method: 'POST', body: JSON.stringify(data) }),
   /**
    * 服务端文件：server/src/routes/questions.ts
+   * 接口：POST /api/v1/questions/ai-answer
+   * Body 参数：content: string, wrong_answer?: string
+   */
+  aiAnswer: (data: { content: string; wrong_answer?: string }) =>
+    request<{ ai_result: any }>('/api/v1/questions/ai-answer', { method: 'POST', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/questions.ts
    * 接口：POST /api/v1/questions
    * Body 参数：user_id: string, content: string, answer: string, images?: string[], subject: string, question_type: string, knowledge_points: string[], methods: string[], difficulty: number, wrong_answer?: string, error_analysis?: string
    */

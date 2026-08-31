@@ -136,6 +136,62 @@ router.post('/validate-tags', async (req, res) => {
   }
 });
 
+// POST /api/v1/questions/ai-answer - Generate AI answer for a question
+router.post('/ai-answer', async (req, res) => {
+  try {
+    const { content, wrong_answer } = req.body;
+
+    if (!content?.trim()) {
+      return res.status(400).json({ error: '题目内容不能为空' });
+    }
+
+    let prompt = `请为以下题目提供详细的正确解答：
+
+题目内容：${content}`;
+
+    if (wrong_answer) {
+      prompt += `
+
+用户的错误答案：${wrong_answer}
+
+请同时分析用户可能的错因，并在解答中指出常见的错误点。`;
+    }
+
+    prompt += `
+
+请以JSON格式返回（不要包含markdown代码块标记）：
+{
+  "answer": "详细的正确解答过程",
+  "key_points": ["关键知识点1", "关键知识点2"],
+  "common_mistakes": ["常见错误1", "常见错误2"],
+  "subject": "科目",
+  "question_type": "题型",
+  "knowledge_points": ["知识点1", "知识点2"],
+  "methods": ["方法1"],
+  "difficulty": 3
+}`;
+
+    const messages = [{ role: 'user', content: prompt }];
+    const result = await invokeLLM(messages, { temperature: 0.3 });
+
+    let aiResult;
+    try {
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        aiResult = JSON.parse(jsonMatch[0]);
+      } else {
+        aiResult = { answer: result, key_points: [], common_mistakes: [], subject: '', question_type: '', knowledge_points: [], methods: [], difficulty: 3 };
+      }
+    } catch {
+      aiResult = { answer: result, key_points: [], common_mistakes: [], subject: '', question_type: '', knowledge_points: [], methods: [], difficulty: 3 };
+    }
+
+    res.json({ ai_result: aiResult });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/v1/questions - Save question to cloud and user bank
 router.post('/', async (req, res) => {
   try {

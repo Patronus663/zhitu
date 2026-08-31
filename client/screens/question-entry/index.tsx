@@ -20,6 +20,8 @@ export default function QuestionEntryScreen() {
   const [tags, setTags] = useState({ subject: '', question_type: '', knowledge_points: [] as string[], methods: [] as string[], difficulty: 3 });
   const [loading, setLoading] = useState(false);
   const [kpInput, setKpInput] = useState('');
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [showAiAnswer, setShowAiAnswer] = useState(false);
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -82,6 +84,71 @@ export default function QuestionEntryScreen() {
       setStep('tags');
     } catch {
       Alert.alert('分析失败', '请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAiAnswer = async () => {
+    if (!content.trim()) {
+      Alert.alert('提示', '请先输入题目内容');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await questionApi.aiAnswer({ content, wrong_answer: wrongAnswer || undefined });
+      setAiResult(result.ai_result);
+      setShowAiAnswer(true);
+      // Auto-fill tags from AI result
+      if (result.ai_result) {
+        setTags({
+          subject: result.ai_result.subject || tags.subject,
+          question_type: result.ai_result.question_type || tags.question_type,
+          knowledge_points: result.ai_result.knowledge_points?.length ? result.ai_result.knowledge_points : tags.knowledge_points,
+          methods: result.ai_result.methods?.length ? result.ai_result.methods : tags.methods,
+          difficulty: result.ai_result.difficulty || tags.difficulty,
+        });
+        if (result.ai_result.answer) {
+          setCorrectAnswer(result.ai_result.answer);
+        }
+      }
+    } catch {
+      Alert.alert('AI解答失败', '请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAiAnswerAndSave = async () => {
+    if (!content.trim()) {
+      Alert.alert('提示', '请先输入题目内容');
+      return;
+    }
+    setLoading(true);
+    try {
+      // Get AI answer
+      const result = await questionApi.aiAnswer({ content, wrong_answer: wrongAnswer || undefined });
+      const aiData = result.ai_result;
+
+      // Auto-save the question with AI-generated data
+      await questionApi.create({
+        user_id: user?.id,
+        content,
+        answer: aiData.answer || '',
+        images,
+        subject: aiData.subject || '',
+        question_type: aiData.question_type || '',
+        knowledge_points: aiData.knowledge_points || [],
+        methods: aiData.methods || [],
+        difficulty: aiData.difficulty || 3,
+        wrong_answer: wrongAnswer || undefined,
+        error_analysis: aiData.common_mistakes?.join('；') || undefined,
+      });
+
+      setAiResult(aiData);
+      setStep('done');
+    } catch {
+      Alert.alert('AI解答并保存失败', '请重试');
     } finally {
       setLoading(false);
     }
@@ -233,6 +300,52 @@ export default function QuestionEntryScreen() {
             <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={handleAnalyzeContent} disabled={loading}>
               {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>AI 分析题目</Text>}
             </TouchableOpacity>
+
+            {/* AI Answer Buttons */}
+            <View style={styles.aiAnswerBtns}>
+              <TouchableOpacity style={[styles.aiAnswerBtn, styles.aiAnswerBtnOutline]} onPress={handleAiAnswer} disabled={loading}>
+                {loading ? <ActivityIndicator color="#7B2D8E" /> : (
+                  <>
+                    <FontAwesome6 name="lightbulb" size={16} color="#7B2D8E" />
+                    <Text style={styles.aiAnswerBtnOutlineText}>AI 解答</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.aiAnswerBtn, styles.aiAnswerBtnSolid]} onPress={handleAiAnswerAndSave} disabled={loading}>
+                {loading ? <ActivityIndicator color="#FFF" /> : (
+                  <>
+                    <FontAwesome6 name="wand-magic-sparkles" size={16} color="#FFF" />
+                    <Text style={styles.aiAnswerBtnSolidText}>AI 解答并录入</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* AI Answer Display */}
+            {showAiAnswer && aiResult && (
+              <View style={styles.aiAnswerCard}>
+                <View style={styles.aiAnswerHeader}>
+                  <FontAwesome6 name="robot" size={18} color="#7B2D8E" />
+                  <Text style={styles.aiAnswerTitle}>AI 解答</Text>
+                  <TouchableOpacity onPress={() => setShowAiAnswer(false)}>
+                    <FontAwesome6 name="xmark" size={14} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.aiAnswerContent}>{aiResult.answer}</Text>
+                {aiResult.key_points?.length > 0 && (
+                  <View style={styles.aiAnswerSection}>
+                    <Text style={styles.aiAnswerLabel}>关键知识点</Text>
+                    <Text style={styles.aiAnswerText}>{aiResult.key_points.join('、')}</Text>
+                  </View>
+                )}
+                {aiResult.common_mistakes?.length > 0 && (
+                  <View style={styles.aiAnswerSection}>
+                    <Text style={styles.aiAnswerLabel}>常见错误</Text>
+                    <Text style={styles.aiAnswerText}>{aiResult.common_mistakes.join('；')}</Text>
+                  </View>
+                )}
+              </View>
+            )}
           </>
         )}
 
@@ -339,4 +452,17 @@ const styles = StyleSheet.create({
   doneTitle: { fontSize: 22, fontWeight: '700', color: '#1A1A2E', marginTop: 16 },
   doneText: { fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' },
   doneBtns: { width: '100%', gap: 12, marginTop: 24 },
+  aiAnswerBtns: { flexDirection: 'row', gap: 12, marginTop: 12 },
+  aiAnswerBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },
+  aiAnswerBtnOutline: { backgroundColor: '#F3E8F9', borderWidth: 1, borderColor: '#E9D5F0' },
+  aiAnswerBtnOutlineText: { color: '#7B2D8E', fontSize: 15, fontWeight: '600' },
+  aiAnswerBtnSolid: { backgroundColor: '#7B2D8E' },
+  aiAnswerBtnSolidText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
+  aiAnswerCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginTop: 16, borderWidth: 1, borderColor: '#E9D5F0' },
+  aiAnswerHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  aiAnswerTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: '#7B2D8E' },
+  aiAnswerContent: { fontSize: 15, color: '#1A1A2E', lineHeight: 24, backgroundColor: '#FAFAF8', borderRadius: 12, padding: 14 },
+  aiAnswerSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F3E8F9' },
+  aiAnswerLabel: { fontSize: 13, fontWeight: '600', color: '#7B2D8E', marginBottom: 4 },
+  aiAnswerText: { fontSize: 14, color: '#4B5563', lineHeight: 20 },
 });
