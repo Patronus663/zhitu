@@ -161,20 +161,17 @@ export default function MyQuestionsScreen() {
           <Text style={styles.statNumber}>{questions.length}</Text>
           <Text style={styles.statLabel}>总题数</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
-            {questions.filter(q => q.subject === '数学').length}
-          </Text>
-          <Text style={styles.statLabel}>数学</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
-            {questions.filter(q => q.subject === '物理').length}
-          </Text>
-          <Text style={styles.statLabel}>物理</Text>
-        </View>
+        {subjectFilters.filter(s => s !== '全部').map((subject) => (
+          <View key={subject}>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>
+                {questions.filter(q => q.subject === subject).length}
+              </Text>
+              <Text style={styles.statLabel}>{subject}</Text>
+            </View>
+          </View>
+        ))}
       </View>
 
       <View style={styles.filterBar}>
