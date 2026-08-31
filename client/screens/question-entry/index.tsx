@@ -297,25 +297,21 @@ export default function QuestionEntryScreen() {
               <TextInput style={styles.input} placeholder="输入正确答案..." value={correctAnswer} onChangeText={setCorrectAnswer} placeholderTextColor="#9CA3AF" multiline />
             </View>
 
-            <TouchableOpacity style={[styles.primaryBtn, { marginTop: 16 }]} onPress={handleAnalyzeContent} disabled={loading}>
-              {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.primaryBtnText}>AI 分析题目</Text>}
-            </TouchableOpacity>
-
-            {/* AI Answer Buttons */}
-            <View style={styles.aiAnswerBtns}>
-              <TouchableOpacity style={[styles.aiAnswerBtn, styles.aiAnswerBtnOutline]} onPress={handleAiAnswer} disabled={loading}>
+            {/* Two Main Action Buttons */}
+            <View style={styles.mainActionBtns}>
+              <TouchableOpacity style={styles.aiAnalyzeBtn} onPress={handleAiAnswer} disabled={loading}>
                 {loading ? <ActivityIndicator color="#7B2D8E" /> : (
                   <>
-                    <FontAwesome6 name="lightbulb" size={16} color="#7B2D8E" />
-                    <Text style={styles.aiAnswerBtnOutlineText}>AI 解答</Text>
+                    <FontAwesome6 name="wand-magic-sparkles" size={18} color="#7B2D8E" />
+                    <Text style={styles.aiAnalyzeBtnText}>AI 解答和分析</Text>
                   </>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.aiAnswerBtn, styles.aiAnswerBtnSolid]} onPress={handleAiAnswerAndSave} disabled={loading}>
+              <TouchableOpacity style={styles.saveBtn} onPress={saveQuestion} disabled={loading}>
                 {loading ? <ActivityIndicator color="#FFF" /> : (
                   <>
-                    <FontAwesome6 name="wand-magic-sparkles" size={16} color="#FFF" />
-                    <Text style={styles.aiAnswerBtnSolidText}>AI 解答并录入</Text>
+                    <FontAwesome6 name="floppy-disk" size={18} color="#FFF" />
+                    <Text style={styles.saveBtnText}>录入</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -335,13 +331,13 @@ export default function QuestionEntryScreen() {
                 {aiResult.key_points?.length > 0 && (
                   <View style={styles.aiAnswerSection}>
                     <Text style={styles.aiAnswerLabel}>关键知识点</Text>
-                    <Text style={styles.aiAnswerText}>{aiResult.key_points.join('、')}</Text>
+                    <Text style={styles.aiAnswerText}>{aiResult.key_points.join('\n')}</Text>
                   </View>
                 )}
                 {aiResult.common_mistakes?.length > 0 && (
                   <View style={styles.aiAnswerSection}>
-                    <Text style={styles.aiAnswerLabel}>常见错误</Text>
-                    <Text style={styles.aiAnswerText}>{aiResult.common_mistakes.join('；')}</Text>
+                    <Text style={styles.aiAnswerLabel}>常见错误提醒</Text>
+                    <Text style={styles.aiAnswerText}>{aiResult.common_mistakes.join('\n')}</Text>
                   </View>
                 )}
               </View>
@@ -465,4 +461,9 @@ const styles = StyleSheet.create({
   aiAnswerSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F3E8F9' },
   aiAnswerLabel: { fontSize: 13, fontWeight: '600', color: '#7B2D8E', marginBottom: 4 },
   aiAnswerText: { fontSize: 14, color: '#4B5563', lineHeight: 20 },
+  mainActionBtns: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  aiAnalyzeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, backgroundColor: '#F3E8F9', borderWidth: 1, borderColor: '#E9D5F0', gap: 8 },
+  aiAnalyzeBtnText: { fontSize: 15, fontWeight: '600', color: '#7B2D8E' },
+  saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, backgroundColor: '#7B2D8E', gap: 8 },
+  saveBtnText: { fontSize: 15, fontWeight: '600', color: '#FFF' },
 });
