@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, RefreshControl, Alert, Modal } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -28,6 +28,8 @@ export default function MyQuestionsScreen() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string>('全部');
 
   const loadQuestions = useCallback(async () => {
@@ -88,6 +90,7 @@ export default function MyQuestionsScreen() {
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
+    setMenuVisible(false);
     Alert.alert(
       '确认删除',
       '确定要删除这道错题吗？此操作不可撤销。',
@@ -109,6 +112,29 @@ export default function MyQuestionsScreen() {
     );
   };
 
+  const handleMenuPress = (item: Question) => {
+    setSelectedQuestion(item);
+    setMenuVisible(true);
+  };
+
+  const handleMenuAction = (action: string) => {
+    if (!selectedQuestion) return;
+    setMenuVisible(false);
+    
+    switch (action) {
+      case 'view':
+        router.push('/question-detail', { questionId: selectedQuestion.id });
+        break;
+      case 'delete':
+        handleDeleteQuestion(selectedQuestion.id);
+        break;
+      case 'share':
+        // TODO: 实现分享功能
+        Alert.alert('提示', '分享功能开发中');
+        break;
+    }
+  };
+
   const renderQuestionCard = ({ item }: { item: Question }) => (
     <TouchableOpacity
       style={styles.questionCard}
@@ -124,6 +150,12 @@ export default function MyQuestionsScreen() {
         <View style={styles.difficultyContainer}>
           {getDifficultyStars(item.difficulty)}
         </View>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => handleMenuPress(item)}
+        >
+          <FontAwesome6 name="ellipsis-vertical" size={16} color="#6B7280" />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.questionContent} numberOfLines={3}>
@@ -134,17 +166,9 @@ export default function MyQuestionsScreen() {
         <View style={styles.typeBadge}>
           <Text style={styles.typeText}>{item.question_type}</Text>
         </View>
-        <View style={styles.cardFooterRight}>
-          <Text style={styles.dateText}>
-            {new Date(item.created_at).toLocaleDateString('zh-CN')}
-          </Text>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteQuestion(item.id)}
-          >
-            <FontAwesome6 name="trash" size={14} color="#DC2626" />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.dateText}>
+          {new Date(item.created_at).toLocaleDateString('zh-CN')}
+        </Text>
       </View>
 
       {item.knowledge_points && item.knowledge_points.length > 0 && (
@@ -236,6 +260,46 @@ export default function MyQuestionsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       />
+
+      {/* 操作菜单弹窗 */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setMenuVisible(false)}
+        >
+          <View style={styles.menuContainer}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleMenuAction('view')}
+            >
+              <FontAwesome6 name="eye" size={18} color="#374151" />
+              <Text style={styles.menuItemText}>查看详情</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleMenuAction('share')}
+            >
+              <FontAwesome6 name="share-alt" size={18} color="#374151" />
+              <Text style={styles.menuItemText}>分享题目</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleMenuAction('delete')}
+            >
+              <FontAwesome6 name="trash" size={18} color="#DC2626" />
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>删除题目</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </Screen>
   );
 }
@@ -385,13 +449,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  deleteButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FEE2E2',
+  menuButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: 200,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  menuItemText: {
+    fontSize: 15,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 16,
   },
   tagsContainer: {
     flexDirection: 'row',

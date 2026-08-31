@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -26,6 +26,7 @@ export default function QuestionDetailScreen() {
   const params = useSafeSearchParams<{ questionId: string }>();
   const [question, setQuestion] = useState<QuestionDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const loadQuestion = useCallback(async () => {
     if (!params.questionId) return;
@@ -122,8 +123,8 @@ export default function QuestionDetailScreen() {
           <FontAwesome6 name="chevron-left" size={20} color="#374151" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>题目详情</Text>
-        <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-          <FontAwesome6 name="trash" size={16} color="#DC2626" />
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
+          <FontAwesome6 name="ellipsis-vertical" size={18} color="#6B7280" />
         </TouchableOpacity>
       </View>
 
@@ -216,6 +217,55 @@ export default function QuestionDetailScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* 操作菜单弹窗 */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setMenuVisible(false)}
+        >
+          <View style={styles.menuContainer}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                Alert.alert('提示', '编辑功能开发中');
+              }}
+            >
+              <FontAwesome6 name="edit" size={18} color="#374151" />
+              <Text style={styles.menuItemText}>编辑题目</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                Alert.alert('提示', '分享功能开发中');
+              }}
+            >
+              <FontAwesome6 name="share-alt" size={18} color="#374151" />
+              <Text style={styles.menuItemText}>分享题目</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                handleDelete();
+              }}
+            >
+              <FontAwesome6 name="trash" size={18} color="#DC2626" />
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>删除题目</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </Screen>
   );
 }
@@ -249,13 +299,47 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
   },
-  deleteButton: {
+  menuButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: 200,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  menuItemText: {
+    fontSize: 15,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 16,
   },
   content: {
     flex: 1,
