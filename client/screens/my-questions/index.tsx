@@ -56,38 +56,10 @@ export default function MyQuestionsScreen() {
 
   const filteredQuestions = selectedSubject === '全部'
     ? questions
-    : questions.filter(q => normalizeSubject(q.subject) === selectedSubject);
+    : questions.filter(q => q.subject === selectedSubject);
 
-  // Normalize subject names (e.g., "高等数学" → "数学")
-  const normalizeSubject = (subject: string): string => {
-    if (!subject) return '';
-    // Map subcategories to main categories
-    const subjectMap: Record<string, string> = {
-      '高等数学': '数学',
-      '线性代数': '数学',
-      '概率论': '数学',
-      '小学数学': '数学',
-      '初中数学': '数学',
-      '高中数学': '数学',
-      '大学物理': '物理',
-      '初中物理': '物理',
-      '高中物理': '物理',
-      '小学科学': '科学',
-      '初中化学': '化学',
-      '高中化学': '化学',
-      '小学英语': '英语',
-      '初中英语': '英语',
-      '高中英语': '英语',
-      '大学英语': '英语',
-      '小学语文': '语文',
-      '初中语文': '语文',
-      '高中语文': '语文',
-    };
-    return subjectMap[subject] || subject;
-  };
-
-  // Dynamically generate subject filters based on questions (normalized)
-  const subjectFilters = ['全部', ...Array.from(new Set(questions.map(q => normalizeSubject(q.subject)).filter(Boolean)))];
+  // Dynamically generate subject filters based on questions
+  const subjectFilters = ['全部', ...Array.from(new Set(questions.map(q => q.subject).filter(Boolean)))];
 
   const getSubjectColor = (subject: string) => {
     const colors: Record<string, string> = {
@@ -194,7 +166,7 @@ export default function MyQuestionsScreen() {
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>
-                {questions.filter(q => normalizeSubject(q.subject) === subject).length}
+                {questions.filter(q => q.subject === subject).length}
               </Text>
               <Text style={styles.statLabel}>{subject}</Text>
             </View>
@@ -298,16 +270,15 @@ const styles = StyleSheet.create({
   },
   filterBar: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     marginBottom: 16,
+    gap: 12,
   },
   filterButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    marginHorizontal: 4,
   },
   filterButtonActive: {
     backgroundColor: '#7B2D8E',
