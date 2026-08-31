@@ -32,6 +32,8 @@ export default function MyQuestionsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string>('全部');
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
 
   const loadQuestions = useCallback(async () => {
     if (!user?.id) return;
@@ -90,30 +92,22 @@ export default function MyQuestionsScreen() {
     ));
   };
 
-  const handleDeleteQuestion = async (question: any) => {
+  const handleDeleteQuestion = (question: Question) => {
     setMenuVisible(false);
-    Alert.alert(
-      '确认删除',
-      '确定要删除这道错题吗？此操作不可撤销。',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '删除',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // question.id is the question ID (from flattened structure)
-              // question.user_question_id is the user_question record ID
-              await questionApi.deleteQuestion(question.id);
-              // Filter by user_question_id since that's what's in the list
-              setQuestions((prev) => prev.filter((q) => q.user_question_id !== question.user_question_id));
-            } catch {
-              Alert.alert('错误', '删除失败，请重试');
-            }
-          },
-        },
-      ]
-    );
+    setQuestionToDelete(question);
+    setDeleteConfirmVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!questionToDelete) return;
+    setDeleteConfirmVisible(false);
+    try {
+      await questionApi.deleteQuestion(questionToDelete.id);
+      setQuestions((prev) => prev.filter((q) => q.user_question_id !== questionToDelete.user_question_id));
+    } catch {
+      Alert.alert('错误', '删除失败，请重试');
+    }
+    setQuestionToDelete(null);
   };
 
   const handleMenuPress = (item: Question) => {
@@ -130,7 +124,9 @@ export default function MyQuestionsScreen() {
         router.push('/question-detail', { questionId: selectedQuestion.id });
         break;
       case 'delete':
-        handleDeleteQuestion(selectedQuestion.id);
+        if (selectedQuestion) {
+          handleDeleteQuestion(selectedQuestion);
+        }
         break;
       case 'share':
         // TODO: 实现分享功能
@@ -303,6 +299,36 @@ export default function MyQuestionsScreen() {
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
+      </Modal>
+
+      {/* 删除确认弹窗 */}
+      <Modal
+        visible={deleteConfirmVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteConfirmVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContainer}>
+            <FontAwesome6 name="exclamation-triangle" size={32} color="#DC2626" />
+            <Text style={styles.deleteModalTitle}>确认删除</Text>
+            <Text style={styles.deleteModalText}>确定要删除这道错题吗？此操作不可撤销。</Text>
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={styles.deleteModalCancelButton}
+                onPress={() => setDeleteConfirmVisible(false)}
+              >
+                <Text style={styles.deleteModalCancelText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteModalConfirmButton}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.deleteModalConfirmText}>删除</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </Screen>
   );
@@ -538,6 +564,61 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteModalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: 280,
+    alignItems: 'center',
+  },
+  deleteModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginTop: 12,
+  },
+  deleteModalText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+    width: '100%',
+  },
+  deleteModalCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  deleteModalCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  deleteModalConfirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+  },
+  deleteModalConfirmText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
