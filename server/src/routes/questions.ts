@@ -145,14 +145,20 @@ router.post('/ai-answer', async (req, res) => {
       return res.status(400).json({ error: '题目内容不能为空' });
     }
 
-    let prompt = `请为以下题目提供详细的正确解答。
+    let prompt = `请为以下题目提供简洁的正确解答。
 
 要求：
-1. 解答过程要用清晰、通俗的自然语言描述，像老师给学生讲题一样
-2. 不要使用特殊符号（如★、●、◆、→、←等），用普通文字表达
-3. 数学公式用普通文字表示，如 x^2 表示x的平方，sqrt(x) 表示根号x
-4. 分步骤说明，每步用"第一步"、"第二步"等中文序号
-5. 语言简洁明了，避免冗余
+1. 解答要简洁精炼，不要废话，直接给出关键步骤和计算过程
+2. 必须包含具体的计算式子，如 f(x) = x² + 2x + 1 = (x+1)²
+3. 数学符号正常使用：x²、√x、≥、≤、±、π、α、β 等
+4. 禁止使用 LaTeX 格式（不要用 $ 符号包裹公式）
+5. 每个步骤之间用换行分隔，一目了然
+6. 格式示例：
+   解：
+   由题意，f(x) = x² + 2x + 1
+   配方得：f(x) = (x+1)²
+   因为 (x+1)² ≥ 0
+   所以当 x = -1 时，f(x)取最小值 0
 
 题目内容：${content}`;
 
@@ -168,15 +174,17 @@ router.post('/ai-answer', async (req, res) => {
 
 请以JSON格式返回（不要包含markdown代码块标记）：
 {
-  "answer": "详细的正确解答过程，用通俗自然的语言",
-  "key_points": ["关键知识点1", "关键知识点2"],
-  "common_mistakes": ["常见错误1", "常见错误2"],
+  "answer": "简洁的解答过程，包含计算式子，每步换行",
+  "key_points": ["知识点1", "知识点2"],
+  "common_mistakes": ["易错点1", "易错点2"],
   "subject": "科目",
   "question_type": "题型",
   "knowledge_points": ["知识点1", "知识点2"],
   "methods": ["方法1"],
   "difficulty": 3
-}`;
+}
+
+注意：answer字段中用 \\n 表示换行，保持排版清晰。`;
 
     const messages = [{ role: 'user', content: prompt }];
     const result = await invokeLLM(messages, { temperature: 0.3 });
