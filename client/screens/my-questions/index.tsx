@@ -161,16 +161,16 @@ export default function MyQuestionsScreen() {
           <Text style={styles.statNumber}>{questions.length}</Text>
           <Text style={styles.statLabel}>总题数</Text>
         </View>
-        {subjectFilters.filter(s => s !== '全部').map((subject) => (
-          <View key={subject}>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
+        {subjectFilters.filter(s => s !== '全部').map((subject, index) => (
+          [
+            <View key={`divider-${index}`} style={styles.statDivider} />,
+            <View key={subject} style={styles.statItem}>
               <Text style={styles.statNumber}>
                 {questions.filter(q => q.subject === subject).length}
               </Text>
               <Text style={styles.statLabel}>{subject}</Text>
             </View>
-          </View>
+          ]
         ))}
       </View>
 
