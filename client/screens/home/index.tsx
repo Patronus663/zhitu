@@ -146,13 +146,13 @@ export default function HomeScreen() {
       let activePlan = plans.find((p: any) => p.status === 'active');
       // If no active plan exists, create a default one
       if (!activePlan) {
-        const newPlan = await planApi.create({
+        const result = await planApi.create({
           user_id: user.id,
           title: '我的学习计划',
           description: '自动创建的学习计划',
           items: [],
         });
-        activePlan = newPlan;
+        activePlan = result.plan;
       }
       await planApi.addItem(activePlan.id, {
         title: newTaskTitle.trim(),
