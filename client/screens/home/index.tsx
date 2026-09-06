@@ -14,7 +14,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [todayItems, setTodayItems] = useState<any[]>([]);
   const [weekItems, setWeekItems] = useState<any[]>([]);
-  const [stats, setStats] = useState({ total: 0, completed: 0 });
+  const [todayStats, setTodayStats] = useState({ total: 0, completed: 0 });
+  const [weekStats, setWeekStats] = useState({ total: 0, completed: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -36,7 +37,8 @@ export default function HomeScreen() {
       const result = await planApi.getToday(user.id);
       setTodayItems(result.today_items || []);
       setWeekItems(result.week_items || []);
-      setStats(result.stats || { total: 0, completed: 0 });
+      setTodayStats(result.stats?.today || { total: 0, completed: 0 });
+      setWeekStats(result.stats?.week || { total: 0, completed: 0 });
     } catch {
       // Silent fail
     }
@@ -52,6 +54,8 @@ export default function HomeScreen() {
 
   const handleComplete = async (itemId: string, currentStatus: boolean) => {
     const newStatus = !currentStatus;
+    // Determine which list the item is in
+    const isTodayItem = todayItems.some(item => item.id === itemId);
     // Optimistic update: update UI immediately
     setTodayItems(prev => prev.map(item =>
       item.id === itemId ? { ...item, is_completed: newStatus } : item
@@ -60,10 +64,17 @@ export default function HomeScreen() {
       item.id === itemId ? { ...item, is_completed: newStatus } : item
     ));
     // Update stats: total stays the same, completed changes
-    setStats(prev => ({
-      total: prev.total,
-      completed: newStatus ? prev.completed + 1 : Math.max(0, prev.completed - 1),
-    }));
+    if (isTodayItem) {
+      setTodayStats(prev => ({
+        total: prev.total,
+        completed: newStatus ? prev.completed + 1 : Math.max(0, prev.completed - 1),
+      }));
+    } else {
+      setWeekStats(prev => ({
+        total: prev.total,
+        completed: newStatus ? prev.completed + 1 : Math.max(0, prev.completed - 1),
+      }));
+    }
 
     try {
       await planApi.completeItem(itemId, newStatus);
@@ -75,10 +86,17 @@ export default function HomeScreen() {
       setWeekItems(prev => prev.map(item =>
         item.id === itemId ? { ...item, is_completed: currentStatus } : item
       ));
-      setStats(prev => ({
-        total: prev.total,
-        completed: newStatus ? Math.max(0, prev.completed - 1) : prev.completed + 1,
-      }));
+      if (isTodayItem) {
+        setTodayStats(prev => ({
+          total: prev.total,
+          completed: newStatus ? Math.max(0, prev.completed - 1) : prev.completed + 1,
+        }));
+      } else {
+        setWeekStats(prev => ({
+          total: prev.total,
+          completed: newStatus ? Math.max(0, prev.completed - 1) : prev.completed + 1,
+        }));
+      }
       alert('更新失败');
     }
   };
@@ -170,7 +188,7 @@ export default function HomeScreen() {
     }
   };
 
-  const progress = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const progress = todayStats.total > 0 ? Math.round((todayStats.completed / todayStats.total) * 100) : 0;
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}月${today.getDate()}日`;
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -203,7 +221,7 @@ export default function HomeScreen() {
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${progress}%` }]} />
             </View>
-            <Text style={styles.progressSub}>{stats.completed}/{stats.total} 项已完成</Text>
+            <Text style={styles.progressSub}>{todayStats.completed}/{todayStats.total} 项已完成</Text>
           </View>
         </View>
 
@@ -276,7 +294,7 @@ export default function HomeScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={styles.sectionTitle}>本周计划</Text>
               {weekItems.length > 0 && (
-                <Text style={styles.sectionBadge}>{weekItems.length}</Text>
+                <Text style={styles.sectionBadge}>{weekStats.completed}/{weekStats.total}</Text>
               )}
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

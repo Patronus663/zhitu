@@ -211,12 +211,12 @@ export const planApi = {
    * 返回：{ today_items: any[], week_items: any[], stats?: { total, completed } }
    */
   getToday: async (userId: string) => {
-    const result = await request<{ today_items: any[]; week_items: any[] }>(`/api/v1/plans/${userId}/today`);
-    const todayItems = result.today_items || [];
-    const weekItems = result.week_items || [];
-    const total = todayItems.length + weekItems.length;
-    const completed = 0;
-    return { today_items: todayItems, week_items: weekItems, stats: { total, completed } };
+    const result = await request<{ today_items: any[]; week_items: any[]; stats: { today: { total: number; completed: number }; week: { total: number; completed: number } } }>(`/api/v1/plans/${userId}/today`);
+    return {
+      today_items: result.today_items || [],
+      week_items: result.week_items || [],
+      stats: result.stats || { today: { total: 0, completed: 0 }, week: { total: 0, completed: 0 } },
+    };
   },
   /**
    * 服务端文件：server/src/routes/plans.ts

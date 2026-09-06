@@ -358,22 +358,43 @@ router.get('/:user_id/today', async (req, res) => {
       .eq('is_completed', false)
       .order('due_date', { ascending: true });
 
-    // Get completion stats
-    const { count: total } = await client
-      .from('plan_items')
-      .select('*', { count: 'exact', head: true })
-      .eq('plan_id', planId);
-
-    const { count: completed } = await client
+    // Get completion stats for today's tasks
+    const { count: todayTotal } = await client
       .from('plan_items')
       .select('*', { count: 'exact', head: true })
       .eq('plan_id', planId)
+      .lte('due_date', today);
+
+    const { count: todayCompleted } = await client
+      .from('plan_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('plan_id', planId)
+      .lte('due_date', today)
+      .eq('is_completed', true);
+
+    // Get completion stats for this week's tasks
+    const { count: weekTotal } = await client
+      .from('plan_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('plan_id', planId)
+      .gt('due_date', today)
+      .lte('due_date', weekEnd);
+
+    const { count: weekCompleted } = await client
+      .from('plan_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('plan_id', planId)
+      .gt('due_date', today)
+      .lte('due_date', weekEnd)
       .eq('is_completed', true);
 
     res.json({
       today_items: todayItems || [],
       week_items: weekItems || [],
-      stats: { total: total || 0, completed: completed || 0 },
+      stats: {
+        today: { total: todayTotal || 0, completed: todayCompleted || 0 },
+        week: { total: weekTotal || 0, completed: weekCompleted || 0 },
+      },
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
