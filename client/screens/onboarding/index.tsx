@@ -68,7 +68,7 @@ export default function OnboardingScreen() {
         {step === 0 && (
           <View style={styles.welcomeContent}>
             <View style={styles.welcomeIcon}>
-              <FontAwesome6 name="book-open" size={32} color="#7B2D8E" />
+              <FontAwesome6 name="book-open" size={48} color="#7B2D8E" />
             </View>
             <Text style={styles.welcomeText}>
               知途是南京大学智能学习助手，帮助你整理错题、制定计划、分析学情，让学习更高效。
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
   subtitle: { fontSize: 15, color: '#6B7280' },
   welcomeContent: { alignItems: 'center', paddingHorizontal: 16 },
-  welcomeIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  welcomeIcon: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   welcomeText: { fontSize: 15, color: '#4B5563', lineHeight: 24, textAlign: 'center', marginBottom: 32 },
   formContent: { gap: 20 },
   field: { gap: 8 },
