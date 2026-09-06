@@ -30,6 +30,7 @@ export default function RootLayout() {
         <Stack.Screen name="my-questions" />
         <Stack.Screen name="question-detail" />
         <Stack.Screen name="my-plans" />
+        <Stack.Screen name="plan-detail" />
       </Stack>
       <Toast />
     </Provider>

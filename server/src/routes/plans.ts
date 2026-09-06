@@ -262,6 +262,34 @@ router.put('/items/:item_id/complete', async (req, res) => {
   }
 });
 
+// GET /api/v1/plans/detail/:plan_id - Get plan detail with items
+router.get('/detail/:plan_id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { data: plan, error: planError } = await client
+      .from('study_plans')
+      .select('*')
+      .eq('id', req.params.plan_id)
+      .single();
+    if (planError) throw new Error(`查询计划失败: ${planError.message}`);
+    if (!plan) {
+      res.status(404).json({ error: '计划不存在' });
+      return;
+    }
+
+    const { data: items, error: itemsError } = await client
+      .from('plan_items')
+      .select('*')
+      .eq('plan_id', req.params.plan_id)
+      .order('sort_order', { ascending: true });
+    if (itemsError) throw new Error(`查询任务失败: ${itemsError.message}`);
+
+    res.json({ ...plan, items: items || [] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/v1/plans/items/:item_id - Get single item detail
 router.get('/items/:item_id', async (req, res) => {
   try {
@@ -281,7 +309,7 @@ router.get('/items/:item_id', async (req, res) => {
 // PUT /api/v1/plans/items/:item_id - Update item
 router.put('/items/:item_id', async (req, res) => {
   try {
-    const { title, description, due_date, sort_order } = req.body;
+    const { title, description, due_date, sort_order, is_completed } = req.body;
     const client = getSupabaseClient();
 
     const updateData: Record<string, any> = {};
@@ -289,6 +317,7 @@ router.put('/items/:item_id', async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (due_date !== undefined) updateData.due_date = due_date;
     if (sort_order !== undefined) updateData.sort_order = sort_order;
+    if (is_completed !== undefined) updateData.is_completed = is_completed;
 
     const { data, error } = await client
       .from('plan_items')

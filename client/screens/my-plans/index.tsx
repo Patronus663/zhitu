@@ -108,7 +108,11 @@ export default function MyPlansScreen() {
   };
 
   const renderPlanCard = ({ item }: { item: Plan }) => (
-    <View style={styles.planCard}>
+    <TouchableOpacity
+      style={styles.planCard}
+      onPress={() => router.push('/plan-detail', { planId: item.id })}
+      activeOpacity={0.7}
+    >
       <View style={styles.planHeader}>
         <View style={styles.planTitleContainer}>
           <FontAwesome6 name="calendar-check" size={18} color="#7B2D8E" />
@@ -116,7 +120,10 @@ export default function MyPlansScreen() {
         </View>
         <TouchableOpacity
           style={styles.deleteBtn}
-          onPress={() => handleDeletePress(item.id)}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleDeletePress(item.id);
+          }}
         >
           <FontAwesome6 name="trash" size={14} color="#EF4444" />
         </TouchableOpacity>
@@ -143,7 +150,7 @@ export default function MyPlansScreen() {
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
