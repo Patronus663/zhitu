@@ -30,6 +30,9 @@ export default function HomeScreen() {
   // Hide completed state
   const [hideTodayCompleted, setHideTodayCompleted] = useState(false);
   const [hideWeekCompleted, setHideWeekCompleted] = useState(false);
+  // Overdue tasks modal state
+  const [overdueModalVisible, setOverdueModalVisible] = useState(false);
+  const [overdueItems, setOverdueItems] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -44,7 +47,37 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
+  const checkOverdueTasks = useCallback(async () => {
+    if (!user) return;
+    try {
+      const result = await planApi.getOverdue(user.id);
+      if (result.overdue_items && result.overdue_items.length > 0) {
+        setOverdueItems(result.overdue_items);
+        setOverdueModalVisible(true);
+      }
+    } catch {
+      // Silent fail
+    }
+  }, [user]);
+
+  const handleMoveOverdueToToday = async () => {
+    if (!user) return;
+    try {
+      await planApi.moveOverdueToToday(user.id);
+      setOverdueModalVisible(false);
+      setOverdueItems([]);
+      await loadData();
+    } catch {
+      // Silent fail
+    }
+  };
+
+  const handleDismissOverdue = () => {
+    setOverdueModalVisible(false);
+    setOverdueItems([]);
+  };
+
+  useFocusEffect(useCallback(() => { loadData(); checkOverdueTasks(); }, [loadData, checkOverdueTasks]));
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -496,6 +529,44 @@ export default function HomeScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Overdue Tasks Modal */}
+      <Modal visible={overdueModalVisible} transparent animationType="fade" onRequestClose={handleDismissOverdue}>
+        <TouchableWithoutFeedback onPress={handleDismissOverdue}>
+          <View style={styles.overdueModalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.overdueModalContent}>
+                <View style={styles.overdueModalIcon}>
+                  <FontAwesome6 name="clock" size={32} color="#F59E0B" />
+                </View>
+                <Text style={styles.overdueModalTitle}>发现未完成的任务</Text>
+                <Text style={styles.overdueModalDesc}>
+                  你有 {overdueItems.length} 个昨天未完成的任务，是否将它们移动到今天？
+                </Text>
+                <View style={styles.overdueModalTasks}>
+                  {overdueItems.slice(0, 3).map((item, index) => (
+                    <View key={item.id || index} style={styles.overdueTaskItem}>
+                      <FontAwesome6 name="circle" size={8} color="#9CA3AF" />
+                      <Text style={styles.overdueTaskText} numberOfLines={1}>{item.title}</Text>
+                    </View>
+                  ))}
+                  {overdueItems.length > 3 && (
+                    <Text style={styles.overdueMoreText}>还有 {overdueItems.length - 3} 个任务...</Text>
+                  )}
+                </View>
+                <View style={styles.overdueModalButtons}>
+                  <TouchableOpacity style={styles.overdueBtnCancel} onPress={handleDismissOverdue}>
+                    <Text style={styles.overdueBtnCancelText}>否，保持原样</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.overdueBtnConfirm} onPress={handleMoveOverdueToToday}>
+                    <Text style={styles.overdueBtnConfirmText}>是，移动到今天</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </Screen>
   );
 }
@@ -561,4 +632,19 @@ const styles = StyleSheet.create({
   addModalBody: { gap: 12, marginBottom: 20 },
   addLabel: { fontSize: 13, fontWeight: '500', color: '#6B7280' },
   addInput: { backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A2E', borderWidth: 1, borderColor: '#E5E7EB' },
+  // Overdue modal styles
+  overdueModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  overdueModalContent: { backgroundColor: '#FFF', borderRadius: 20, padding: 24, width: '100%', maxWidth: 340, alignItems: 'center' },
+  overdueModalIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  overdueModalTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
+  overdueModalDesc: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 16, lineHeight: 20 },
+  overdueModalTasks: { width: '100%', backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12, marginBottom: 20 },
+  overdueTaskItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  overdueTaskText: { fontSize: 14, color: '#374151', flex: 1 },
+  overdueMoreText: { fontSize: 12, color: '#9CA3AF', marginTop: 4, paddingLeft: 16 },
+  overdueModalButtons: { flexDirection: 'row', gap: 12, width: '100%' },
+  overdueBtnCancel: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center' },
+  overdueBtnCancelText: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
+  overdueBtnConfirm: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#7B2D8E', alignItems: 'center' },
+  overdueBtnConfirmText: { fontSize: 14, fontWeight: '600', color: '#FFF' },
 });

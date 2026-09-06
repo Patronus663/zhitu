@@ -293,6 +293,22 @@ export const planApi = {
    */
   moveItem: (itemId: string, newDueDate: string) =>
     request<any>(`/api/v1/plans/items/${itemId}/move`, { method: 'POST', body: JSON.stringify({ new_due_date: newDueDate }) }),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：GET /api/v1/plans/overdue/:user_id
+   * Path 参数：user_id: string
+   * 返回：{ overdue_items: any[] }
+   */
+  getOverdue: (userId: string) =>
+    request<{ overdue_items: any[] }>(`/api/v1/plans/overdue/${userId}`),
+  /**
+   * 服务端文件：server/src/routes/plans.ts
+   * 接口：POST /api/v1/plans/move-overdue/:user_id
+   * Path 参数：user_id: string
+   * 返回：{ moved: number }
+   */
+  moveOverdueToToday: (userId: string) =>
+    request<{ moved: number }>(`/api/v1/plans/move-overdue/${userId}`, { method: 'POST' }),
 };
 
 // Chat APIs

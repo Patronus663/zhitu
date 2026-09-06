@@ -318,6 +318,74 @@ router.post('/items/:item_id/move', async (req, res) => {
   }
 });
 
+// GET /api/v1/plans/overdue/:user_id - Get overdue tasks for a user
+router.get('/overdue/:user_id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const today = new Date().toISOString().split('T')[0];
+
+    // Get active plan for user
+    const { data: plan } = await client
+      .from('study_plans')
+      .select('id')
+      .eq('user_id', req.params.user_id)
+      .eq('is_active', true)
+      .single();
+
+    if (!plan) {
+      return res.json({ overdue_items: [] });
+    }
+
+    // Get incomplete tasks with due_date < today
+    const { data: overdueItems, error } = await client
+      .from('plan_items')
+      .select('*')
+      .eq('plan_id', plan.id)
+      .lt('due_date', today)
+      .eq('is_completed', false)
+      .order('due_date', { ascending: true });
+
+    if (error) throw new Error(`查询失败: ${error.message}`);
+    res.json({ overdue_items: overdueItems || [] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/v1/plans/move-overdue/:user_id - Move all overdue tasks to today
+router.post('/move-overdue/:user_id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const today = new Date().toISOString().split('T')[0];
+
+    // Get active plan for user
+    const { data: plan } = await client
+      .from('study_plans')
+      .select('id')
+      .eq('user_id', req.params.user_id)
+      .eq('is_active', true)
+      .single();
+
+    if (!plan) {
+      return res.json({ moved: 0 });
+    }
+
+    // Update all incomplete tasks with due_date < today to today
+    const { data, error, count } = await client
+      .from('plan_items')
+      .update({ due_date: today })
+      .eq('plan_id', plan.id)
+      .lt('due_date', today)
+      .eq('is_completed', false)
+      .select();
+
+    if (error) throw new Error(`移动失败: ${error.message}`);
+    res.json({ moved: count || (data ? data.length : 0) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/v1/plans/:user_id/today - Get today's and this week's tasks
 router.get('/:user_id/today', async (req, res) => {
   try {
