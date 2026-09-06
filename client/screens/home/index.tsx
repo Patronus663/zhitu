@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
@@ -415,53 +415,57 @@ export default function HomeScreen() {
 
       {/* Add Task Modal */}
       <Modal visible={addModalVisible} transparent animationType="slide" onRequestClose={() => setAddModalVisible(false)}>
-        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setAddModalVisible(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%' }}>
-            <View style={styles.addModal}>
-              <View style={styles.addModalHeader}>
-                <Text style={styles.addModalTitle}>添加{addTarget === 'today' ? '今日' : '本周'}任务</Text>
-                <TouchableOpacity onPress={() => setAddModalVisible(false)}>
-                  <FontAwesome6 name="xmark" size={20} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.addModalBody}>
-                <Text style={styles.addLabel}>任务标题</Text>
-                <TextInput
-                  style={styles.addInput}
-                  placeholder="输入任务标题"
-                  placeholderTextColor="#9CA3AF"
-                  value={newTaskTitle}
-                  onChangeText={setNewTaskTitle}
-                />
-                <Text style={styles.addLabel}>任务描述（可选）</Text>
-                <TextInput
-                  style={[styles.addInput, { height: 80, textAlignVertical: 'top' }]}
-                  placeholder="输入任务描述"
-                  placeholderTextColor="#9CA3AF"
-                  value={newTaskDesc}
-                  onChangeText={setNewTaskDesc}
-                  multiline
-                />
-                <Text style={styles.addLabel}>截止日期</Text>
-                <TextInput
-                  style={styles.addInput}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#9CA3AF"
-                  value={newTaskDate}
-                  onChangeText={setNewTaskDate}
-                />
-              </View>
-              <View style={styles.moveActions}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setAddModalVisible(false)}>
-                  <Text style={styles.cancelBtnText}>取消</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveBtn} onPress={handleAddTask}>
-                  <Text style={styles.saveBtnText}>添加任务</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => setAddModalVisible(false)}>
+          <View style={styles.menuOverlay}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%' }}>
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View style={styles.addModal}>
+                  <View style={styles.addModalHeader}>
+                    <Text style={styles.addModalTitle}>添加{addTarget === 'today' ? '今日' : '本周'}任务</Text>
+                    <TouchableOpacity onPress={() => setAddModalVisible(false)}>
+                      <FontAwesome6 name="xmark" size={20} color="#6B7280" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.addModalBody}>
+                    <Text style={styles.addLabel}>任务标题</Text>
+                    <TextInput
+                      style={styles.addInput}
+                      placeholder="输入任务标题"
+                      placeholderTextColor="#9CA3AF"
+                      value={newTaskTitle}
+                      onChangeText={setNewTaskTitle}
+                    />
+                    <Text style={styles.addLabel}>任务描述（可选）</Text>
+                    <TextInput
+                      style={[styles.addInput, { height: 80, textAlignVertical: 'top' }]}
+                      placeholder="输入任务描述"
+                      placeholderTextColor="#9CA3AF"
+                      value={newTaskDesc}
+                      onChangeText={setNewTaskDesc}
+                      multiline
+                    />
+                    <Text style={styles.addLabel}>截止日期</Text>
+                    <TextInput
+                      style={styles.addInput}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#9CA3AF"
+                      value={newTaskDate}
+                      onChangeText={setNewTaskDate}
+                    />
+                  </View>
+                  <View style={styles.moveActions}>
+                    <TouchableOpacity style={styles.cancelBtn} onPress={() => setAddModalVisible(false)}>
+                      <Text style={styles.cancelBtnText}>取消</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.saveBtn} onPress={handleAddTask}>
+                      <Text style={styles.saveBtnText}>添加任务</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </Screen>
   );
