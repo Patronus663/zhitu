@@ -17,7 +17,6 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Alert,
 } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 
@@ -37,11 +36,14 @@ export default function MyPlansScreen() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newStartDate, setNewStartDate] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadPlans = useCallback(async () => {
     if (!user?.id) return;
@@ -79,28 +81,30 @@ export default function MyPlansScreen() {
       setNewEndDate('');
       loadPlans();
     } catch (error) {
-      Alert.alert('错误', '创建计划失败');
+      console.error('Failed to create plan:', error);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeletePlan = async (planId: string) => {
-    Alert.alert('确认删除', '确定要删除这个计划吗？', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '删除',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await planApi.delete(planId);
-            loadPlans();
-          } catch (error) {
-            Alert.alert('错误', '删除计划失败');
-          }
-        },
-      },
-    ]);
+  const handleDeletePress = (planId: string) => {
+    setPlanToDelete(planId);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!planToDelete) return;
+    setDeleting(true);
+    try {
+      await planApi.delete(planToDelete);
+      setShowDeleteModal(false);
+      setPlanToDelete(null);
+      loadPlans();
+    } catch (error) {
+      console.error('Failed to delete plan:', error);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const renderPlanCard = ({ item }: { item: Plan }) => (
@@ -112,7 +116,7 @@ export default function MyPlansScreen() {
         </View>
         <TouchableOpacity
           style={styles.deleteBtn}
-          onPress={() => handleDeletePlan(item.id)}
+          onPress={() => handleDeletePress(item.id)}
         >
           <FontAwesome6 name="trash" size={14} color="#EF4444" />
         </TouchableOpacity>
@@ -133,10 +137,11 @@ export default function MyPlansScreen() {
             <Text style={styles.dateText}>结束: {item.end_date}</Text>
           </View>
         ) : null}
-      </View>
-      <View style={styles.statusBadge}>
-        <View style={[styles.statusDot, item.is_active ? styles.activeDot : styles.inactiveDot]} />
-        <Text style={styles.statusText}>{item.is_active ? '进行中' : '已结束'}</Text>
+        <View style={[styles.statusTag, item.is_active ? styles.statusActive : styles.statusInactive]}>
+          <Text style={[styles.statusText, item.is_active ? styles.statusTextActive : styles.statusTextInactive]}>
+            {item.is_active ? '进行中' : '已结束'}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -165,9 +170,9 @@ export default function MyPlansScreen() {
 
       {plans.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <FontAwesome6 name="calendar-days" size={48} color="#D1D5DB" />
-          <Text style={styles.emptyText}>暂无长期计划</Text>
-          <Text style={styles.emptySubtext}>点击右上角 + 添加新计划</Text>
+          <FontAwesome6 name="calendar-xmark" size={48} color="#D1D5DB" />
+          <Text style={styles.emptyText}>暂无计划</Text>
+          <Text style={styles.emptySubText}>点击右上角 + 创建你的第一个长期计划</Text>
         </View>
       ) : (
         <FlatList
@@ -181,82 +186,121 @@ export default function MyPlansScreen() {
 
       {/* Add Plan Modal */}
       <Modal visible={showAddModal} transparent animationType="slide">
-        <TouchableWithoutFeedback onPress={() => !saving && setShowAddModal(false)} disabled={Platform.OS === 'web'}>
+        <TouchableWithoutFeedback onPress={() => !saving && setShowAddModal(false)}>
           <View style={styles.modalOverlay}>
-            <KeyboardAvoidingView
-              style={{ flex: 1 }}
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            >
-              <TouchableWithoutFeedback onPress={Keyboard.dismiss} disabled={Platform.OS === 'web'}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <KeyboardAvoidingView
+                style={styles.modalContainer}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              >
                 <View style={styles.modalContent}>
                   <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>新建长期计划</Text>
-                    <TouchableOpacity onPress={() => setShowAddModal(false)} disabled={saving}>
+                    <Text style={styles.modalTitle}>创建新计划</Text>
+                    <TouchableOpacity onPress={() => !saving && setShowAddModal(false)}>
                       <FontAwesome6 name="xmark" size={20} color="#6B7280" />
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.inputGroup}>
+                  <View style={styles.modalBody}>
                     <Text style={styles.inputLabel}>计划名称 *</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="例如：考研复习计划"
                       value={newTitle}
                       onChangeText={setNewTitle}
+                      placeholder="输入计划名称"
                       placeholderTextColor="#9CA3AF"
                     />
-                  </View>
 
-                  <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>计划描述</Text>
                     <TextInput
                       style={[styles.input, styles.textArea]}
-                      placeholder="描述你的计划目标..."
                       value={newDescription}
                       onChangeText={setNewDescription}
+                      placeholder="输入计划描述（可选）"
+                      placeholderTextColor="#9CA3AF"
                       multiline
                       numberOfLines={3}
+                    />
+
+                    <Text style={styles.inputLabel}>开始日期</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newStartDate}
+                      onChangeText={setNewStartDate}
+                      placeholder="YYYY-MM-DD（可选）"
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    <Text style={styles.inputLabel}>结束日期</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newEndDate}
+                      onChangeText={setNewEndDate}
+                      placeholder="YYYY-MM-DD（可选）"
                       placeholderTextColor="#9CA3AF"
                     />
                   </View>
 
-                  <View style={styles.dateRow}>
-                    <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                      <Text style={styles.inputLabel}>开始日期</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="2026-09-01"
-                        value={newStartDate}
-                        onChangeText={setNewStartDate}
-                        placeholderTextColor="#9CA3AF"
-                      />
-                    </View>
-                    <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                      <Text style={styles.inputLabel}>结束日期</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="2026-12-31"
-                        value={newEndDate}
-                        onChangeText={setNewEndDate}
-                        placeholderTextColor="#9CA3AF"
-                      />
-                    </View>
+                  <View style={styles.modalFooter}>
+                    <TouchableOpacity
+                      style={[styles.modalBtn, styles.cancelBtn]}
+                      onPress={() => !saving && setShowAddModal(false)}
+                      disabled={saving}
+                    >
+                      <Text style={styles.cancelBtnText}>取消</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalBtn, styles.saveBtn, (!newTitle.trim() || saving) && styles.saveBtnDisabled]}
+                      onPress={handleAddPlan}
+                      disabled={!newTitle.trim() || saving}
+                    >
+                      {saving ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.saveBtnText}>创建</Text>
+                      )}
+                    </TouchableOpacity>
                   </View>
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteModal} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => !deleting && setShowDeleteModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.deleteModalContent}>
+                <View style={styles.deleteIconContainer}>
+                  <FontAwesome6 name="triangle-exclamation" size={32} color="#EF4444" />
+                </View>
+                <Text style={styles.deleteTitle}>确认删除</Text>
+                <Text style={styles.deleteMessage}>确定要删除这个计划吗？此操作不可撤销。</Text>
+                <View style={styles.deleteBtnRow}>
                   <TouchableOpacity
-                    style={[styles.submitBtn, (!newTitle.trim() || saving) && styles.submitBtnDisabled]}
-                    onPress={handleAddPlan}
-                    disabled={!newTitle.trim() || saving}
+                    style={[styles.deleteActionBtn, styles.deleteCancelBtn]}
+                    onPress={() => !deleting && setShowDeleteModal(false)}
+                    disabled={deleting}
                   >
-                    {saving ? (
+                    <Text style={styles.deleteCancelBtnText}>取消</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.deleteActionBtn, styles.deleteConfirmBtn]}
+                    onPress={handleConfirmDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.submitBtnText}>创建计划</Text>
+                      <Text style={styles.deleteConfirmBtnText}>删除</Text>
                     )}
                   </TouchableOpacity>
                 </View>
-              </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
@@ -265,7 +309,6 @@ export default function MyPlansScreen() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -274,38 +317,90 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#F3F4F6',
   },
-  backBtn: { padding: 8 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  backBtn: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
   addBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: '#7B2D8E',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  listContent: { padding: 16 },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 16,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  listContent: {
+    padding: 16,
+  },
   planCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#F3F4F6',
   },
   planHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
-  planTitleContainer: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 },
-  planTitle: { fontSize: 16, fontWeight: '600', color: '#111827', marginLeft: 8 },
-  deleteBtn: { padding: 8 },
-  planDescription: { fontSize: 14, color: '#6B7280', marginBottom: 12, lineHeight: 20 },
-  planFooter: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
+  planTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+  },
+  planTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    flex: 1,
+  },
+  deleteBtn: {
+    padding: 8,
+  },
+  planDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  planFooter: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   dateTag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -313,58 +408,173 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    marginRight: 8,
-    marginBottom: 4,
+    gap: 4,
   },
-  dateText: { fontSize: 12, color: '#6B7280', marginLeft: 4 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  activeDot: { backgroundColor: '#10B981' },
-  inactiveDot: { backgroundColor: '#9CA3AF' },
-  statusText: { fontSize: 12, color: '#6B7280' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: '#6B7280', marginTop: 16 },
-  emptySubtext: { fontSize: 14, color: '#9CA3AF', marginTop: 8, textAlign: 'center' },
+  dateText: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  statusTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  statusActive: {
+    backgroundColor: '#DCFCE7',
+  },
+  statusInactive: {
+    backgroundColor: '#F3F4F6',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  statusTextActive: {
+    color: '#16A34A',
+  },
+  statusTextInactive: {
+    color: '#6B7280',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '90%',
+    maxWidth: 400,
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '80%',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  inputGroup: { marginBottom: 16 },
-  inputLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
   input: {
     backgroundColor: '#F9FAFB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    fontSize: 15,
+    fontSize: 16,
     color: '#111827',
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
-  dateRow: { flexDirection: 'row', marginBottom: 16 },
-  submitBtn: {
-    backgroundColor: '#7B2D8E',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
-  submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  modalFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelBtn: {
+    backgroundColor: '#F3F4F6',
+  },
+  cancelBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  saveBtn: {
+    backgroundColor: '#7B2D8E',
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
+  },
+  saveBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  deleteModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '80%',
+    maxWidth: 320,
+    alignItems: 'center',
+  },
+  deleteIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  deleteTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  deleteMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  deleteBtnRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  deleteActionBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  deleteCancelBtn: {
+    backgroundColor: '#F3F4F6',
+  },
+  deleteCancelBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  deleteConfirmBtn: {
+    backgroundColor: '#EF4444',
+  },
+  deleteConfirmBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
 });
