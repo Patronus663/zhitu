@@ -143,7 +143,7 @@ export default function HomeScreen() {
     if (!user) return;
     try {
       let plans = await planApi.getUserPlans(user.id);
-      let activePlan = plans.find((p: any) => p.status === 'active');
+      let activePlan = plans.find((p: any) => p.is_active === true);
       // If no active plan exists, create a default one
       if (!activePlan) {
         const result = await planApi.create({
