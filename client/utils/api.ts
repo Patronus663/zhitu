@@ -241,8 +241,10 @@ export const planApi = {
    * Path 参数：user_id: string
    * 返回：Array<{ id, title, status, ... }>
    */
-  getUserPlans: (userId: string) =>
-    request<any[]>(`/api/v1/plans/${userId}`),
+  getUserPlans: async (userId: string) => {
+    const result = await request<{ plans: any[] }>(`/api/v1/plans/${userId}`);
+    return result.plans || [];
+  },
   /**
    * 服务端文件：server/src/routes/plans.ts
    * 接口：POST /api/v1/plans/:plan_id/items
