@@ -140,14 +140,19 @@ export default function HomeScreen() {
       alert('请输入任务标题');
       return;
     }
-    // Find the active plan
     if (!user) return;
     try {
-      const plans = await planApi.getUserPlans(user.id);
-      const activePlan = plans.find((p: any) => p.status === 'active');
+      let plans = await planApi.getUserPlans(user.id);
+      let activePlan = plans.find((p: any) => p.status === 'active');
+      // If no active plan exists, create a default one
       if (!activePlan) {
-        alert('请先创建一个学习计划');
-        return;
+        const newPlan = await planApi.create({
+          user_id: user.id,
+          title: '我的学习计划',
+          description: '自动创建的学习计划',
+          items: [],
+        });
+        activePlan = newPlan;
       }
       await planApi.addItem(activePlan.id, {
         title: newTaskTitle.trim(),
