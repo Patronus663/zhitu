@@ -154,10 +154,14 @@ export default function HomeScreen() {
         });
         activePlan = result.plan;
       }
+      // Use the date based on the target (today or week)
+      const dueDate = addTarget === 'today'
+        ? new Date().toISOString().split('T')[0]
+        : newTaskDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
       await planApi.addItem(activePlan.id, {
         title: newTaskTitle.trim(),
         description: newTaskDesc.trim() || undefined,
-        due_date: newTaskDate || undefined,
+        due_date: dueDate,
       });
       setAddModalVisible(false);
       await loadData();
