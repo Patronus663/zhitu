@@ -126,15 +126,19 @@ router.post('/generate', async (req, res) => {
 // POST /api/v1/plans - Create study plan
 router.post('/', async (req, res) => {
   try {
-    const { user_id, title, description, start_date, end_date, items } = req.body;
+    const { user_id, title, description, start_date, end_date, items, plan_type } = req.body;
     const client = getSupabaseClient();
 
-    // Deactivate other plans
-    await client
-      .from('study_plans')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('user_id', user_id)
-      .eq('is_active', true);
+    // Only deactivate other daily plans
+    const effectivePlanType = plan_type || 'daily';
+    if (effectivePlanType === 'daily') {
+      await client
+        .from('study_plans')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('user_id', user_id)
+        .eq('is_active', true)
+        .eq('plan_type', 'daily');
+    }
 
     // Create plan
     const { data: plan, error: planErr } = await client
@@ -145,7 +149,8 @@ router.post('/', async (req, res) => {
         description,
         start_date,
         end_date,
-        is_active: true,
+        is_active: effectivePlanType === 'daily',
+        plan_type: effectivePlanType,
       })
       .select()
       .single();
@@ -372,12 +377,13 @@ router.get('/overdue/:user_id', async (req, res) => {
     const client = getSupabaseClient();
     const today = new Date().toISOString().split('T')[0];
 
-    // Get active plan for user
+    // Get active daily plan for user
     const { data: plan } = await client
       .from('study_plans')
       .select('id')
       .eq('user_id', req.params.user_id)
       .eq('is_active', true)
+      .eq('plan_type', 'daily')
       .single();
 
     if (!plan) {
@@ -406,12 +412,13 @@ router.post('/move-overdue/:user_id', async (req, res) => {
     const client = getSupabaseClient();
     const today = new Date().toISOString().split('T')[0];
 
-    // Get active plan for user
+    // Get active daily plan for user
     const { data: plan } = await client
       .from('study_plans')
       .select('id')
       .eq('user_id', req.params.user_id)
       .eq('is_active', true)
+      .eq('plan_type', 'daily')
       .single();
 
     if (!plan) {
@@ -441,12 +448,13 @@ router.get('/:user_id/today', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     const weekEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    // Get active plan
+    // Get active daily plan
     const { data: plans } = await client
       .from('study_plans')
       .select('id')
       .eq('user_id', req.params.user_id)
       .eq('is_active', true)
+      .eq('plan_type', 'daily')
       .limit(1);
 
     if (!plans || plans.length === 0) {

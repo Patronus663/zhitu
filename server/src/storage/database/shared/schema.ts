@@ -114,12 +114,14 @@ export const studyPlans = pgTable(
     start_date: varchar("start_date", { length: 20 }),
     end_date: varchar("end_date", { length: 20 }),
     is_active: boolean("is_active").default(true).notNull(),
+    plan_type: varchar("plan_type", { length: 20 }).default('daily').notNull(), // 'daily' or 'long_term'
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("study_plans_user_id_idx").on(table.user_id),
     index("study_plans_is_active_idx").on(table.is_active),
+    index("study_plans_plan_type_idx").on(table.plan_type),
   ]
 );
 

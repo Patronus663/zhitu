@@ -231,9 +231,9 @@ export const planApi = {
   /**
    * 服务端文件：server/src/routes/plans.ts
    * 接口：POST /api/v1/plans
-   * Body 参数：user_id: string, title: string, description?: string, start_date?: string, end_date?: string, items?: Array<{title: string, description?: string, due_date: string}>
+   * Body 参数：user_id: string, title: string, description?: string, start_date?: string, end_date?: string, plan_type?: 'daily' | 'long_term', items?: Array<{title: string, description?: string, due_date: string}>
    */
-  create: (data: { user_id: string; title: string; description?: string; start_date?: string; end_date?: string; items?: any[] }) =>
+  create: (data: { user_id: string; title: string; description?: string; start_date?: string; end_date?: string; plan_type?: 'daily' | 'long_term'; items?: any[] }) =>
     request<any>('/api/v1/plans', { method: 'POST', body: JSON.stringify(data) }),
   /**
    * 服务端文件：server/src/routes/plans.ts

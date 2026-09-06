@@ -73,6 +73,7 @@ export default function MyPlansScreen() {
         description: newDescription.trim() || undefined,
         start_date: newStartDate || undefined,
         end_date: newEndDate || undefined,
+        plan_type: 'long_term',
       });
       setShowAddModal(false);
       setNewTitle('');

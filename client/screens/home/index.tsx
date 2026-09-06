@@ -194,13 +194,14 @@ export default function HomeScreen() {
     if (!user) return;
     try {
       let plans = await planApi.getUserPlans(user.id);
-      let activePlan = plans.find((p: any) => p.is_active === true);
-      // If no active plan exists, create a default one
+      let activePlan = plans.find((p: any) => p.is_active === true && p.plan_type === 'daily');
+      // If no active daily plan exists, create a default one
       if (!activePlan) {
         const result = await planApi.create({
           user_id: user.id,
           title: '我的学习计划',
           description: '自动创建的学习计划',
+          plan_type: 'daily',
           items: [],
         });
         activePlan = result.plan;
