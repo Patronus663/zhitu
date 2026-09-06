@@ -180,6 +180,25 @@ router.post('/', async (req, res) => {
   }
 });
 
+// DELETE /api/v1/plans/:plan_id - Delete a study plan
+router.delete('/:plan_id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { plan_id } = req.params;
+
+    // Delete plan items first
+    await client.from('plan_items').delete().eq('plan_id', plan_id);
+
+    // Delete the plan
+    const { error } = await client.from('study_plans').delete().eq('id', plan_id);
+    if (error) throw new Error(`删除计划失败: ${error.message}`);
+
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/v1/plans/:plan_id/items - Add a new item to a plan
 router.post('/:plan_id/items', async (req, res) => {
   try {

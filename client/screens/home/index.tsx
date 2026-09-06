@@ -417,6 +417,12 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.quickLabel}>知途聊聊</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.quickCard} onPress={() => router.push('/my-plans')}>
+              <View style={[styles.quickIcon, { backgroundColor: '#EDE9FE' }]}>
+                <FontAwesome6 name="calendar-days" size={20} color="#7C3AED" />
+              </View>
+              <Text style={styles.quickLabel}>我的计划</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
