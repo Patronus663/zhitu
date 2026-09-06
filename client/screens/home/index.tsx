@@ -188,7 +188,9 @@ export default function HomeScreen() {
     }
   };
 
-  const progress = todayStats.total > 0 ? Math.round((todayStats.completed / todayStats.total) * 100) : 0;
+  const todayTotal = Number(todayStats.total) || 0;
+  const todayCompleted = Number(todayStats.completed) || 0;
+  const progress = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}月${today.getDate()}日`;
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -221,7 +223,7 @@ export default function HomeScreen() {
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${progress}%` }]} />
             </View>
-            <Text style={styles.progressSub}>{todayStats.completed}/{todayStats.total} 项已完成</Text>
+            <Text style={styles.progressSub}>{todayCompleted}/{todayTotal} 项已完成</Text>
           </View>
         </View>
 
