@@ -126,6 +126,9 @@ export default function OnboardingScreen() {
                 <Text style={styles.primaryBtnText}>下一步</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity style={styles.skipBtn} onPress={handleNext}>
+              <Text style={styles.skipBtnText}>还没想好，点击下一步跳过</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -170,6 +173,9 @@ export default function OnboardingScreen() {
                 <Text style={styles.primaryBtnText}>{loading ? '创建中...' : '开始学习'}</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity style={styles.skipBtn} onPress={handleComplete} disabled={loading}>
+              <Text style={styles.skipBtnText}>不想填写，点击下一步跳过</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -205,4 +211,6 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
   secondaryBtn: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
   secondaryBtnText: { color: '#6B7280', fontSize: 16, fontWeight: '500' },
+  skipBtn: { alignItems: 'center', paddingVertical: 12, marginTop: 4 },
+  skipBtnText: { color: '#9CA3AF', fontSize: 13, fontWeight: '400' },
 });
