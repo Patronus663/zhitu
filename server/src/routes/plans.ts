@@ -426,35 +426,26 @@ router.get('/:user_id/today', async (req, res) => {
       .eq('is_completed', false)
       .order('due_date', { ascending: true });
 
-    // Get completion stats for today's tasks
-    const { count: todayTotal } = await client
+    // Get completion stats for today's tasks - fetch all items and count manually
+    const { data: allTodayItems } = await client
       .from('plan_items')
-      .select('*', { count: 'exact', head: true })
+      .select('id, is_completed')
       .eq('plan_id', planId)
       .lte('due_date', today);
 
-    const { count: todayCompleted } = await client
-      .from('plan_items')
-      .select('*', { count: 'exact', head: true })
-      .eq('plan_id', planId)
-      .lte('due_date', today)
-      .eq('is_completed', true);
+    const todayTotal = allTodayItems ? allTodayItems.length : 0;
+    const todayCompleted = allTodayItems ? allTodayItems.filter(i => i.is_completed).length : 0;
 
-    // Get completion stats for this week's tasks
-    const { count: weekTotal } = await client
+    // Get completion stats for this week's tasks - fetch all items and count manually
+    const { data: allWeekItems } = await client
       .from('plan_items')
-      .select('*', { count: 'exact', head: true })
+      .select('id, is_completed')
       .eq('plan_id', planId)
       .gt('due_date', today)
       .lte('due_date', weekEnd);
 
-    const { count: weekCompleted } = await client
-      .from('plan_items')
-      .select('*', { count: 'exact', head: true })
-      .eq('plan_id', planId)
-      .gt('due_date', today)
-      .lte('due_date', weekEnd)
-      .eq('is_completed', true);
+    const weekTotal = allWeekItems ? allWeekItems.length : 0;
+    const weekCompleted = allWeekItems ? allWeekItems.filter(i => i.is_completed).length : 0;
 
     res.json({
       today_items: todayItems || [],
