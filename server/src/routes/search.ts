@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getSupabaseClient } from '../storage/database/supabase-client.js';
 import { invokeLLM } from '../services/llm.js';
+import { SearchClient, Config, HeaderUtils } from 'coze-coding-dev-sdk';
 
 const router = Router();
 
@@ -9,6 +10,7 @@ router.post('/', async (req, res) => {
   try {
     const { scope, subject, knowledge_points, description, count = 5, user_id } = req.body;
     const client = getSupabaseClient();
+    const customHeaders = HeaderUtils.extractForwardHeaders(req.headers as Record<string, string>);
 
     // Use LLM to analyze search intent
     const intentPrompt = `分析用户的检索需求，提取关键信息：
@@ -40,23 +42,38 @@ router.post('/', async (req, res) => {
     let questions: any[] = [];
 
     if (scope === 'cloud') {
-      // Search cloud question bank
+      // Search cloud question bank (loose subject matching to avoid missing rows)
       let query = client
         .from('questions')
         .select('*')
         .eq('is_active', true);
 
       if (searchIntent.subject) {
-        query = query.eq('subject', searchIntent.subject);
+        query = query.ilike('subject', `%${searchIntent.subject}%`);
       }
 
       const { data, error } = await query
         .order('rating', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(Number(count) * 2);
+        .limit(Math.max(Number(count) * 2, 15));
 
       if (error) throw new Error(`查询失败: ${error.message}`);
-      questions = data || [];
+      let candidates: any[] = data || [];
+
+      // If subject filter returns too little, broaden to all cloud questions
+      if (candidates.length < Number(count) && searchIntent.subject) {
+        const { data: broad } = await client
+          .from('questions')
+          .select('*')
+          .eq('is_active', true)
+          .order('rating', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(Math.max(Number(count) * 3, 20));
+        const existing = new Set(candidates.map((c: any) => c.id));
+        candidates = (broad || []).filter((q: any) => !existing.has(q.id)).concat(candidates);
+      }
+
+      questions = candidates;
 
       // Use LLM to rank by relevance
       if (questions.length > 0) {
@@ -76,7 +93,7 @@ ${JSON.stringify(questions.map((q: any) => ({ id: q.id, subject: q.subject, cont
 }`;
 
         const rankMessages = [{ role: 'user', content: rankPrompt }];
-        const rankResult = await invokeLLM(rankMessages, { temperature: 0.2 });
+        const rankResult = await invokeLLM(rankMessages, { temperature: 0.2 }, customHeaders);
 
         try {
           const jsonMatch = rankResult.match(/\{[\s\S]*\}/);
@@ -90,6 +107,37 @@ ${JSON.stringify(questions.map((q: any) => ({ id: q.id, subject: q.subject, cont
           }
         } catch {
           questions = questions.slice(0, Number(count));
+        }
+      }
+
+      // Fallback: enrich from web when cloud bank is not enough
+      if (questions.length < Number(count)) {
+        try {
+          const sdkClient = new SearchClient(new Config(), customHeaders);
+          const need = Math.min(Number(count) - questions.length, 4);
+          const searchResp = await sdkClient.webSearch(
+            `${(searchIntent.subject || '') + ' ' + description} 题目 典型例题`,
+            need,
+            true,
+          );
+          const webQuestions = (searchResp.web_items || []).slice(0, need).map((w: any) => ({
+            id: undefined,
+            subject: searchIntent.subject || '',
+            question_type: '网络题目',
+            content: (w.title || '').trim(),
+            answer: w.summary || w.snippet || '',
+            knowledge_points: searchIntent.knowledge_points || [],
+            methods: [],
+            difficulty: (searchIntent.difficulty_range && searchIntent.difficulty_range[0]) || 3,
+            rating: 0,
+            source: '网络',
+            source_label: '来源于网络',
+            url: w.url,
+            site_name: w.site_name,
+          }));
+          questions = questions.concat(webQuestions);
+        } catch {
+          // ignore web search failure
         }
       }
     } else {

@@ -123,7 +123,13 @@ export default function SearchScreen() {
                   <View style={styles.resultHeader}>
                     <Text style={styles.resultSubject}>{item.subject || '未知科目'}</Text>
                     <Text style={styles.resultType}>{item.question_type || ''}</Text>
-                    {scope === 'cloud' && (
+                    {item.source_label ? (
+                      <View style={styles.webBadge}>
+                        <FontAwesome6 name="globe" size={10} color="#2563EB" />
+                        <Text style={styles.webBadgeText}>{item.source_label}</Text>
+                      </View>
+                    ) : null}
+                    {scope === 'cloud' && !item.source_label && (
                       <View style={styles.ratingRow}>
                         {[1, 2, 3, 4, 5].map((s) => (
                           <TouchableOpacity key={s} onPress={(e) => { e.stopPropagation(); handleRate(item.id, s); }}>
@@ -139,7 +145,7 @@ export default function SearchScreen() {
                       <Text key={ki} style={styles.resultTag}>{kp}</Text>
                     ))}
                   </View>
-                  {scope === 'cloud' && (
+                  {scope === 'cloud' && !item.source_label && (
                     <TouchableOpacity style={styles.feedbackBtn} onPress={(e) => { e.stopPropagation(); handleFeedback(item.id); }}>
                       <Text style={styles.feedbackText}>题目有误？点击反馈</Text>
                     </TouchableOpacity>
@@ -179,6 +185,8 @@ const styles = StyleSheet.create({
   resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   resultSubject: { fontSize: 12, fontWeight: '600', color: '#7B2D8E', backgroundColor: '#F3E8F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   resultType: { fontSize: 12, color: '#6B7280' },
+  webBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
+  webBadgeText: { fontSize: 10, color: '#2563EB', fontWeight: '600' },
   ratingRow: { flexDirection: 'row', gap: 2, marginLeft: 'auto' },
   resultContent: { fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 },
   resultTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
