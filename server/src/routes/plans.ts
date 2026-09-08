@@ -463,12 +463,12 @@ router.get('/:user_id/today', async (req, res) => {
 
     const planId = plans[0].id;
 
-    // Today's items
+    // Today's items - only items due today (not yesterday or earlier)
     const { data: todayItems } = await client
       .from('plan_items')
       .select('*')
       .eq('plan_id', planId)
-      .lte('due_date', today)
+      .eq('due_date', today)
       .eq('is_completed', false)
       .order('sort_order', { ascending: true });
 
@@ -487,7 +487,7 @@ router.get('/:user_id/today', async (req, res) => {
       .from('plan_items')
       .select('id, is_completed')
       .eq('plan_id', planId)
-      .lte('due_date', today);
+      .eq('due_date', today);
 
     const todayTotal = allTodayItems ? allTodayItems.length : 0;
     const todayCompleted = allTodayItems ? allTodayItems.filter(i => i.is_completed).length : 0;
