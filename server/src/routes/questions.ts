@@ -210,12 +210,44 @@ router.post('/ai-answer', async (req, res) => {
 // POST /api/v1/questions - Save question to cloud and user bank
 router.post('/', async (req, res) => {
   try {
-    const {
+    let {
       user_id, content, answer, images, subject, question_type,
       knowledge_points, methods, difficulty, wrong_answer,
     } = req.body;
+    if (!Array.isArray(knowledge_points)) knowledge_points = [];
+    if (!Array.isArray(methods)) methods = [];
 
     const client = getSupabaseClient();
+
+    // Fallback: if key tags missing, auto-generate them with LLM so the question
+    // can be found by search. Missing subject/knowledge_points would otherwise
+    // be filtered out by the search query.
+    if (!content?.trim() || (!subject && knowledge_points.length === 0)) {
+      if (!content?.trim()) {
+        return res.status(400).json({ error: '题目内容不能为空' });
+      }
+      const tagPrompt = `请为以下题目构建细粒度标签，以JSON格式返回（不要包含markdown代码块标记）：
+{
+  "subject": "所属科目",
+  "question_type": "题型（选择题/填空题/解答题/证明题等）",
+  "knowledge_points": ["知识点1", "知识点2"],
+  "methods": ["方法1", "方法2"],
+  "difficulty": 1到5的整数
+}
+题目内容：${content}`;
+      const tagResult = await invokeLLM([{ role: 'user', content: tagPrompt }], { temperature: 0.3 });
+      try {
+        const jsonMatch = tagResult.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (!subject) subject = parsed.subject || '';
+          if (!question_type) question_type = parsed.question_type || '';
+          if (knowledge_points.length === 0) knowledge_points = parsed.knowledge_points || [];
+          if (methods.length === 0) methods = parsed.methods || [];
+          if (!difficulty) difficulty = parsed.difficulty || 3;
+        }
+      } catch { /* keep existing tags on parse failure */ }
+    }
 
     // Insert into cloud question bank
     const { data: question, error: qErr } = await client
@@ -224,10 +256,10 @@ router.post('/', async (req, res) => {
         content,
         answer,
         images: images || [],
-        subject,
-        question_type,
-        knowledge_points: knowledge_points || [],
-        methods: methods || [],
+        subject: subject || '未分类',
+        question_type: question_type || '未分类',
+        knowledge_points,
+        methods,
         difficulty: difficulty || 3,
         created_by: user_id,
       })
