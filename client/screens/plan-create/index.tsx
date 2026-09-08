@@ -35,6 +35,7 @@ export default function PlanCreateScreen() {
         user_id: user.id,
         title: generatedPlan.title || goal.slice(0, 20),
         description: generatedPlan.description || '',
+        plan_type: 'long_term',
         items: generatedPlan.items || [],
       });
       Alert.alert('计划已创建', '学习计划已保存，可以在首页查看', [
