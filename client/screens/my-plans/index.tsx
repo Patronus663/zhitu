@@ -27,7 +27,21 @@ interface Plan {
   start_date: string | null;
   end_date: string | null;
   is_active: boolean;
+  total_items: number;
+  completed_items: number;
   created_at: string;
+}
+
+function statusIsActive(plan: Plan): boolean {
+  if (plan.total_items === 0) return false;
+  if (Number(plan.completed_items) >= Number(plan.total_items)) return false;
+  return true;
+}
+
+function getPlanStatus(plan: Plan): string {
+  if (plan.total_items === 0) return '待添加任务';
+  if (Number(plan.completed_items) >= Number(plan.total_items)) return '已完成';
+  return '进行中';
 }
 
 export default function MyPlansScreen() {
@@ -145,9 +159,9 @@ export default function MyPlansScreen() {
             <Text style={styles.dateText}>结束: {item.end_date}</Text>
           </View>
         ) : null}
-        <View style={[styles.statusTag, item.is_active ? styles.statusActive : styles.statusInactive]}>
-          <Text style={[styles.statusText, item.is_active ? styles.statusTextActive : styles.statusTextInactive]}>
-            {item.is_active ? '进行中' : '已结束'}
+        <View style={[styles.statusTag, statusIsActive(item) ? styles.statusActive : styles.statusInactive]}>
+          <Text style={[styles.statusText, statusIsActive(item) ? styles.statusTextActive : styles.statusTextInactive]}>
+            {getPlanStatus(item)}
           </Text>
         </View>
       </View>

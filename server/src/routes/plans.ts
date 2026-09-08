@@ -4,17 +4,46 @@ import { invokeLLM } from '../services/llm.js';
 
 const router = Router();
 
-// GET /api/v1/plans/:user_id - Get user's study plans
+// GET /api/v1/plans/:user_id - Get user's study plans with item stats
 router.get('/:user_id', async (req, res) => {
   try {
     const client = getSupabaseClient();
-    const { data, error } = await client
+    const { data: plans, error } = await client
       .from('study_plans')
       .select('*')
       .eq('user_id', req.params.user_id)
       .order('created_at', { ascending: false });
     if (error) throw new Error(`查询失败: ${error.message}`);
-    res.json({ plans: data || [] });
+
+    const planList = plans || [];
+    if (planList.length === 0) {
+      return res.json({ plans: [] });
+    }
+
+    const planIds = planList.map((p: any) => p.id);
+    const { data: items } = await client
+      .from('plan_items')
+      .select('plan_id, is_completed')
+      .in('plan_id', planIds);
+
+    const statsMap: Record<string, { total: number; completed: number }> = {};
+    for (const plan of planList) {
+      statsMap[plan.id] = { total: 0, completed: 0 };
+    }
+    for (const it of items || []) {
+      if (statsMap[it.plan_id]) {
+        statsMap[it.plan_id].total += 1;
+        if (it.is_completed) statsMap[it.plan_id].completed += 1;
+      }
+    }
+
+    const enriched = planList.map((p: any) => ({
+      ...p,
+      total_items: statsMap[p.id]?.total || 0,
+      completed_items: statsMap[p.id]?.completed || 0,
+    }));
+
+    res.json({ plans: enriched });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
