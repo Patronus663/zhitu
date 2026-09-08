@@ -139,11 +139,22 @@ export default function SearchScreen() {
                       </View>
                     )}
                   </View>
-                  <Text style={styles.resultContent} numberOfLines={4}>{item.content}</Text>
+                  {item.source_label && (
+                    <View style={styles.webNotice}>
+                      <Text style={styles.webNoticeText}>网络检索到的相关学习资料（非题库正式题目），仅作参考。</Text>
+                    </View>
+                  )}
+                  <Text style={styles.resultFieldLabel}>题干</Text>
+                  <Text style={styles.resultContent} numberOfLines={5}>{item.content}</Text>
+                  <Text style={styles.resultFieldLabel}>知识点</Text>
                   <View style={styles.resultTags}>
-                    {(item.knowledge_points || []).slice(0, 3).map((kp: string, ki: number) => (
-                      <Text key={ki} style={styles.resultTag}>{kp}</Text>
-                    ))}
+                    {(item.knowledge_points || []).length > 0 ? (
+                      (item.knowledge_points || []).slice(0, 4).map((kp: string, ki: number) => (
+                        <Text key={ki} style={styles.resultTag}>{kp}</Text>
+                      ))
+                    ) : (
+                      <Text style={styles.resultNoTag}>暂无对应知识点</Text>
+                    )}
                   </View>
                   {scope === 'cloud' && !item.source_label && (
                     <TouchableOpacity style={styles.feedbackBtn} onPress={(e) => { e.stopPropagation(); handleFeedback(item.id); }}>
@@ -188,7 +199,11 @@ const styles = StyleSheet.create({
   webBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EFF6FF', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8 },
   webBadgeText: { fontSize: 10, color: '#2563EB', fontWeight: '600' },
   ratingRow: { flexDirection: 'row', gap: 2, marginLeft: 'auto' },
-  resultContent: { fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 8 },
+  resultContent: { fontSize: 15, color: '#1F2937', lineHeight: 24, marginTop: 6, marginBottom: 12 },
+  resultFieldLabel: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', marginTop: 4 },
+  webNotice: { backgroundColor: '#F0F9FF', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 8 },
+  webNoticeText: { fontSize: 12, color: '#2563EB', lineHeight: 18 },
+  resultNoTag: { fontSize: 12, color: '#D1D5DB' },
   resultTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   resultTag: { fontSize: 11, color: '#6B7280', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   feedbackBtn: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
