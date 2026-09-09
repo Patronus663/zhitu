@@ -449,12 +449,12 @@ const styles = StyleSheet.create({
   },
   typeText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#111827',
     fontWeight: '600',
   },
   dateText: {
     fontSize: 15,
-    color: '#FFFFFF',
+    color: '#111827',
     fontWeight: '500',
   },
 });
