@@ -122,7 +122,15 @@ export default function SearchScreen() {
                   key={item.id || idx}
                   style={styles.resultCard}
                   activeOpacity={0.7}
-                  onPress={() => { if (Date.now() - innerPress.current < 350) return; if (item.id) router.push('/question-detail', { questionId: item.id }); }}
+                  onPress={() => {
+                    if (Date.now() - innerPress.current < 350) return;
+                    if (item.id) {
+                      router.push('/question-detail', { questionId: item.id });
+                    } else if (item.source_label) {
+                      // 网络来源题目不在题库中，直接携带数据进入展示模式
+                      router.push('/question-detail', { webQuestion: item });
+                    }
+                  }}
                 >
                   <View style={styles.resultHeader}>
                     <Text style={styles.resultSubject}>{item.subject || '未知科目'}</Text>

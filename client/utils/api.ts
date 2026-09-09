@@ -245,11 +245,11 @@ export const planApi = {
   /**
    * 服务端文件：server/src/routes/plans.ts
    * 接口：POST /api/v1/plans/generate
-   * Body 参数：user_id: string, learning_content: string
+   * Body 参数：learning_content: string, duration_days: number
    * 返回：{ plan_data: any }
    */
-  generate: async (userId: string, learningContent: string, _duration: number) => {
-    const result = await request<{ plan_data: any }>('/api/v1/plans/generate', { method: 'POST', body: JSON.stringify({ user_id: userId, learning_content: learningContent }) });
+  generate: async (userId: string, learningContent: string, durationDays: number) => {
+    const result = await request<{ plan_data: any }>('/api/v1/plans/generate', { method: 'POST', body: JSON.stringify({ user_id: userId, learning_content: learningContent, duration_days: durationDays }) });
     return { plan: result.plan_data };
   },
   /**

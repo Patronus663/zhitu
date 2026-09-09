@@ -104,9 +104,13 @@ router.get('/:user_id/active', async (req, res) => {
 // POST /api/v1/plans/generate - Generate study plan with AI
 router.post('/generate', async (req, res) => {
   try {
-    const { learning_content } = req.body;
+    const { learning_content, duration_days } = req.body;
     const user_id = req.authUserId;
     const client = getSupabaseClient();
+
+    const effectiveDuration = Math.max(1, Math.min(365, Number(duration_days) || 30));
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date(Date.now() + effectiveDuration * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Get user info and learning profile
     const { data: user } = await client
@@ -134,6 +138,8 @@ router.post('/generate', async (req, res) => {
 
 用户想学习的内容：${learning_content}
 
+计划时长：${effectiveDuration} 天（${startDate} 至 ${endDate}）
+
 请制定一个合理的学习计划，以JSON格式返回（不要包含markdown代码块标记）：
 {
   "title": "计划标题",
@@ -151,10 +157,11 @@ router.post('/generate', async (req, res) => {
 }
 
 要求：
-1. 计划应该循序渐进，从基础到进阶
-2. 每个任务应该具体可执行
-3. 时间安排合理，考虑学生实际情况
-4. 至少包含5-8个具体任务`;
+1. start_date 必须为 ${startDate}，end_date 必须为 ${endDate}，所有任务 due_date 不得超出该区间
+2. 计划应该循序渐进，从基础到进阶
+3. 每个任务应该具体可执行
+4. 时间安排合理，考虑学生实际情况，大约每3-5天安排一个任务
+5. 任务数量与计划时长匹配（短计划适当精简，长计划适当增加），保持5-8个任务`;
 
     const messages = [{ role: 'user', content: prompt }];
     const result = await invokeLLM(messages, { temperature: 0.7 });

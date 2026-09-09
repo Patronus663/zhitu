@@ -24,12 +24,34 @@ interface QuestionDetail {
 
 export default function QuestionDetailScreen() {
   const router = useSafeRouter();
-  const params = useSafeSearchParams<{ questionId: string }>();
+  const params = useSafeSearchParams<{ questionId: string; webQuestion?: any }>();
   const [question, setQuestion] = useState<QuestionDetail | null>(null);
+  const [isWebQuestion, setIsWebQuestion] = useState(false);
   const [loading, setLoading] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
 
   const loadQuestion = useCallback(async () => {
+    // 网络来源题目：不查库，直接用检索结果数据展示
+    if (params.webQuestion) {
+      const w = params.webQuestion;
+      setIsWebQuestion(true);
+      setQuestion({
+        id: w.id || `web-${Date.now()}`,
+        content: w.content || '',
+        answer: w.answer || '',
+        subject: w.subject || '网络题目',
+        question_type: w.question_type || '网络题目',
+        difficulty: w.difficulty || 3,
+        knowledge_points: w.knowledge_points || [],
+        methods: w.methods || [],
+        error_analysis: undefined,
+        wrong_answer: undefined,
+        is_mastered: false,
+        created_at: new Date().toISOString(),
+      } as QuestionDetail);
+      setLoading(false);
+      return;
+    }
     if (!params.questionId) return;
     try {
       setLoading(true);
@@ -40,7 +62,7 @@ export default function QuestionDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [params.questionId]);
+  }, [params.questionId, params.webQuestion]);
 
   useFocusEffect(
     useCallback(() => {
@@ -210,11 +232,11 @@ export default function QuestionDetailScreen() {
           <Text style={styles.typeText}>{question.question_type}</Text>
         </View>
 
-        {/* Date */}
+        {/* Date / Source */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>录入时间</Text>
+          <Text style={styles.sectionTitle}>{isWebQuestion ? '来源' : '录入时间'}</Text>
           <Text style={styles.dateText}>
-            {new Date(question.created_at).toLocaleString('zh-CN')}
+            {isWebQuestion ? '网络检索结果，仅供参考' : new Date(question.created_at).toLocaleString('zh-CN')}
           </Text>
         </View>
       </ScrollView>
@@ -232,17 +254,21 @@ export default function QuestionDetailScreen() {
           onPress={() => setMenuVisible(false)}
         >
           <View style={styles.menuContainer}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push('/question-edit', { questionId: question.id });
-              }}
-            >
-              <FontAwesome6 name="pen" size={18} color="#374151" />
-              <Text style={styles.menuItemText}>编辑题目</Text>
-            </TouchableOpacity>
-            <View style={styles.menuDivider} />
+            {!isWebQuestion && (
+              <>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setMenuVisible(false);
+                    router.push('/question-edit', { questionId: question.id });
+                  }}
+                >
+                  <FontAwesome6 name="pen" size={18} color="#374151" />
+                  <Text style={styles.menuItemText}>编辑题目</Text>
+                </TouchableOpacity>
+                <View style={styles.menuDivider} />
+              </>
+            )}
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -253,17 +279,21 @@ export default function QuestionDetailScreen() {
               <FontAwesome6 name="share-nodes" size={18} color="#374151" />
               <Text style={styles.menuItemText}>分享题目</Text>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                handleDelete();
-              }}
-            >
-              <FontAwesome6 name="trash" size={18} color="#DC2626" />
-              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>删除题目</Text>
-            </TouchableOpacity>
+            {!isWebQuestion && (
+              <>
+                <View style={styles.menuDivider} />
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setMenuVisible(false);
+                    handleDelete();
+                  }}
+                >
+                  <FontAwesome6 name="trash" size={18} color="#DC2626" />
+                  <Text style={[styles.menuItemText, { color: '#DC2626' }]}>删除题目</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
