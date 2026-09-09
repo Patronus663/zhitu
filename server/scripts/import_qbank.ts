@@ -8,7 +8,7 @@ interface Question { content: string; answer: string; subject: string; question_
 const units: Unit[] = JSON.parse(fs.readFileSync('/tmp/units.json', 'utf-8'));
 
 function buildPrompt(content: string, year: string): string {
-  return `你是微积分出题助手。以下是《微积分II》${year}期末考试试卷内容（包含题干与答案摘要，因来源为PDF提取，文本可能零散甚至有些数学符号错乱）。
+  return `你是微积分出题助手。以下是《微积分》${year}期末考试试卷内容（包含题干与答案摘要，因来源为文本/PDF提取，文本可能零散甚至有些数学符号错乱，部分公式的分数、下标、上下限等以空格分隔表达）。
 请把其中每一道独立的题目整理成规范的题目记录。输出格式要求：每一行只输出一个 JSON 对象，不要输出数组，不要 markdown 代码块标记，不要任何解释。每行形如：
 {"content":"题干","answer":"答案或解答要点","subject":"高等数学","question_type":"计算题","knowledge_points":["知识点"],"methods":["方法"],"difficulty":3}
 要求：
