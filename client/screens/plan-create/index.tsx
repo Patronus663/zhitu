@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
@@ -13,6 +13,14 @@ export default function PlanCreateScreen() {
   const [duration, setDuration] = useState('7');
   const [generatedPlan, setGeneratedPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(false);
+  const toastTimer = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   const handleGenerate = async () => {
     if (!goal.trim() || !user) return;
@@ -38,9 +46,14 @@ export default function PlanCreateScreen() {
         plan_type: 'long_term',
         items: generatedPlan.items || [],
       });
-      Alert.alert('计划已创建', '学习计划已保存，可以在首页查看', [
-        { text: '好的', onPress: () => router.replace('/(tabs)') },
-      ]);
+      // 弹窗提示，保持 1.5 秒后自动回到创建计划页面
+      setToast(true);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      toastTimer.current = setTimeout(() => {
+        setToast(false);
+        setGeneratedPlan(null);
+        setGoal('');
+      }, 1500);
     } catch {
       Alert.alert('保存失败', '请重试');
     } finally {
@@ -140,6 +153,14 @@ export default function PlanCreateScreen() {
           </>
         )}
       </ScrollView>
+
+      {toast ? (
+        <View style={styles.toastWrap} pointerEvents="none">
+          <View style={styles.toastBox}>
+            <Text style={styles.toastText}>您已创建计划</Text>
+          </View>
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -177,4 +198,7 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
   secondaryBtn: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
   secondaryBtnText: { color: '#6B7280', fontSize: 16, fontWeight: '500' },
+  toastWrap: { position: 'absolute', top: '42%', left: 0, right: 0, alignItems: 'center', zIndex: 999 },
+  toastBox: { backgroundColor: '#7B2D8E', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 14, maxWidth: '88%', shadowColor: '#7B2D8E', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
+  toastText: { color: '#FFF', fontSize: 16, fontWeight: '600', textAlign: 'center' },
 });
