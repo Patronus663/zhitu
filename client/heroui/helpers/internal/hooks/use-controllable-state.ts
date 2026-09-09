@@ -47,7 +47,7 @@ function useControllableState<T>({
   });
   const isControlled = prop !== undefined;
   const value = isControlled ? prop : uncontrolledProp;
-  const handleChange = useCallbackRef(onChange);
+  const handleChange = useCallbackRef(onChange as unknown as (...args: unknown[]) => unknown);
 
   /**
    * When the component transitions from controlled (prop !== undefined)
@@ -92,7 +92,7 @@ function useUncontrolledState<T>({
   const uncontrolledState = useState<T | undefined>(defaultProp);
   const [value] = uncontrolledState;
   const prevValueRef = useRef(value);
-  const handleChange = useCallbackRef(onChange);
+  const handleChange = useCallbackRef(onChange as unknown as (...args: unknown[]) => unknown);
 
   useEffect(() => {
     if (prevValueRef.current !== value) {

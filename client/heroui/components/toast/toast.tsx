@@ -1,5 +1,5 @@
 import React, { forwardRef, useMemo } from 'react';
-import { View, Text as RNText } from 'react-native';
+import { View, Text as RNText, type GestureResponderEvent } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useThemeColor } from '../../helpers/external/hooks';
@@ -339,7 +339,7 @@ const ToastClose = forwardRef<View, ToastCloseProps>((props, ref) => {
    * If hide and id are available from context, use them to hide the toast
    * Otherwise, use the provided onPress handler
    */
-  const handlePress = (event: Parameters<NonNullable<React.ComponentProps<typeof Button>['onPress']>>[0]) => {
+  const handlePress = (event: GestureResponderEvent) => {
     if (hide && id) {
       hide(id);
     }

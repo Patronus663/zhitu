@@ -141,7 +141,7 @@ export function ToastProvider({
   const total = useSharedValue<number>(0);
 
   const idCounter = useRef(0);
-  const timeoutRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const timeoutRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const hideRef = useRef<((ids?: string | string[] | 'all') => void) | null>(
     null
   );
