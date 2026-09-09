@@ -1,3 +1,5 @@
+import EventSource from 'react-native-sse';
+
 const API_BASE = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
 // 登录态 token（由 AuthContext 在登录态变化时注入），业务接口通过 x-session 头携带
@@ -365,4 +367,53 @@ export const chatApi = {
    */
   send: (userId: string, content: string) =>
     request<{ reply: string; message: any }>(`/api/v1/chat/${userId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }),
+  /**
+   * 服务端文件：server/src/routes/chat.ts
+   * 接口：POST /api/v1/chat/:user_id/stream（SSE 流式）
+   * Body 参数：message: string
+   * 事件帧：data: {"content": "..."}，结束帧：data: [DONE]
+   * 返回取消函数，用于组件卸载时中断连接
+   */
+  streamChat: (userId: string, message: string, callbacks: {
+    onContent: (chunk: string) => void;
+    onDone: () => void;
+    onError: () => void;
+  }) => {
+    const es = new EventSource(`${API_BASE}/api/v1/chat/${userId}/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        ...(authToken ? { 'x-session': authToken } : {}),
+      },
+      body: JSON.stringify({ message }),
+    } as any);
+
+    es.addEventListener('message', (e: any) => {
+      if (!e.data) return;
+      if (e.data === '[DONE]') {
+        es.close();
+        callbacks.onDone();
+        return;
+      }
+      try {
+        const payload = JSON.parse(e.data);
+        if (typeof payload.content === 'string') {
+          callbacks.onContent(payload.content);
+        }
+      } catch {
+        // 忽略无法解析的帧
+      }
+    });
+    es.addEventListener('error', () => {
+      es.close();
+      callbacks.onError();
+    });
+    es.addEventListener('close', () => {
+      es.close();
+      callbacks.onDone();
+    });
+
+    return () => es.close();
+  },
 };

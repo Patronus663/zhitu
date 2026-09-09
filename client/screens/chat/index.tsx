@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
@@ -19,12 +19,12 @@ export default function ChatScreen() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const streamCancelRef = useRef<(() => void) | null>(null);
 
-  useFocusEffect(useCallback(() => {
-    if (user) loadMessages();
-  }, [user]));
+  // 组件卸载时中断进行中的流式请求
+  useEffect(() => () => streamCancelRef.current?.(), []);
 
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!user) return;
     try {
       const data = await chatApi.getMessages(user.id);
@@ -32,23 +32,54 @@ export default function ChatScreen() {
     } catch {
       // Silent
     }
-  };
+  }, [user]);
+
+  useFocusEffect(useCallback(() => {
+    if (user) loadMessages();
+  }, [user, loadMessages]));
 
   const handleSend = async () => {
     if (!input.trim() || loading || !user) return;
     const userMsg = input.trim();
+    const assistantId = (Date.now() + 1).toString();
     setInput('');
-    setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'user', content: userMsg }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), role: 'user' as const, content: userMsg },
+      { id: assistantId, role: 'assistant' as const, content: '' },
+    ]);
     setLoading(true);
 
-    try {
-      const data = await chatApi.send(user.id, userMsg);
-      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: data.reply || '抱歉，我暂时无法回答。' }]);
-    } catch {
-      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: '网络错误，请重试。' }]);
-    } finally {
+    let received = '';
+    let finished = false;
+    const appendChunk = (chunk: string) => {
+      received += chunk;
+      setMessages((prev) => prev.map((m) => (m.id === assistantId ? { ...m, content: received } : m)));
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
       setLoading(false);
-    }
+      streamCancelRef.current = null;
+    };
+
+    streamCancelRef.current = chatApi.streamChat(user.id, userMsg, {
+      onContent: appendChunk,
+      onDone: () => {
+        if (!received) appendChunk('抱歉，我暂时无法回答。');
+        finish();
+      },
+      onError: async () => {
+        // SSE 失败：降级为非流式请求
+        try {
+          const data = await chatApi.send(user.id, userMsg);
+          appendChunk(data.reply || '抱歉，我暂时无法回答。');
+        } catch {
+          appendChunk('网络错误，请重试。');
+        }
+        finish();
+      },
+    });
   };
 
   const renderMessage = ({ item }: { item: Message }) => (
@@ -58,7 +89,9 @@ export default function ChatScreen() {
           <Text style={styles.aiAvatarText}>知</Text>
         </View>
       )}
-      <Text style={[styles.msgText, item.role === 'user' && styles.userMsgText]}>{item.content}</Text>
+      <Text style={[styles.msgText, item.role === 'user' && styles.userMsgText]}>
+        {item.content || (item.role === 'assistant' && loading ? '…' : '')}
+      </Text>
     </View>
   );
 
