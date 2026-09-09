@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#A78BFA',
     marginBottom: 8,
   },
   questionBox: {
