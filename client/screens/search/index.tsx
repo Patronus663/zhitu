@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
@@ -15,6 +15,7 @@ export default function SearchScreen() {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const innerPress = useRef(0);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -118,7 +119,7 @@ export default function SearchScreen() {
                   key={item.id || idx}
                   style={styles.resultCard}
                   activeOpacity={0.7}
-                  onPress={() => item.id && router.push('/question-detail', { questionId: item.id })}
+                  onPress={() => { if (Date.now() - innerPress.current < 350) return; if (item.id) router.push('/question-detail', { questionId: item.id }); }}
                 >
                   <View style={styles.resultHeader}>
                     <Text style={styles.resultSubject}>{item.subject || '未知科目'}</Text>
@@ -132,7 +133,7 @@ export default function SearchScreen() {
                     {scope === 'cloud' && !item.source_label && (
                       <View style={styles.ratingRow}>
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <TouchableOpacity key={s} onPress={(e) => { e.stopPropagation(); handleRate(item.id, s); }}>
+                          <TouchableOpacity key={s} onPress={() => { innerPress.current = Date.now(); handleRate(item.id, s); }}>
                             <FontAwesome6 name="star" size={14} color={s <= (item.rating || 0) ? '#C9A96E' : '#E5E7EB'} />
                           </TouchableOpacity>
                         ))}
@@ -157,7 +158,7 @@ export default function SearchScreen() {
                     )}
                   </View>
                   {scope === 'cloud' && !item.source_label && (
-                    <TouchableOpacity style={styles.feedbackBtn} onPress={(e) => { e.stopPropagation(); handleFeedback(item.id); }}>
+                    <TouchableOpacity style={styles.feedbackBtn} onPress={() => { innerPress.current = Date.now(); handleFeedback(item.id); }}>
                       <Text style={styles.feedbackText}>题目有误？点击反馈</Text>
                     </TouchableOpacity>
                   )}
