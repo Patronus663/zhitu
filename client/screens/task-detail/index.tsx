@@ -4,6 +4,7 @@ import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { planApi } from '@/utils/api';
+import { SmartDateInput } from '@/components/SmartDateInput';
 import { FontAwesome6 } from '@expo/vector-icons';
 
 export default function TaskDetailScreen() {
@@ -222,12 +223,10 @@ export default function TaskDetailScreen() {
         <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowMoveModal(false)}>
           <View style={styles.moveModal}>
             <Text style={styles.moveTitle}>选择新日期</Text>
-            <TextInput
-              style={styles.moveDateInput}
-              value={moveDate}
-              onChangeText={setMoveDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9CA3AF"
+            <SmartDateInput
+              value={moveDate || null}
+              onChange={setMoveDate}
+              iconColor="#7B2D8E"
             />
             <View style={styles.moveActions}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowMoveModal(false)}>

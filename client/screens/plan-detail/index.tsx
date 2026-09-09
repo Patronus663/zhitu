@@ -5,6 +5,7 @@ import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useFocusEffect } from 'expo-router';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { planApi } from '@/utils/api';
+import { SmartDateInput } from '@/components/SmartDateInput';
 import { useUser } from '@/contexts/UserContext';
 
 interface PlanItem {
@@ -256,13 +257,13 @@ export default function PlanDetailScreen() {
                       numberOfLines={3}
                     />
 
-                    <Text style={styles.inputLabel}>截止日期</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newItemDueDate}
-                      onChangeText={setNewItemDueDate}
-                      placeholder="YYYY-MM-DD（可选）"
-                      placeholderTextColor="#9CA3AF"
+                    <SmartDateInput
+                      label="截止日期"
+                      value={newItemDueDate || null}
+                      onChange={setNewItemDueDate}
+                      placeholder="可选"
+                      containerStyle={{ marginBottom: 0 }}
+                      iconColor="#7B2D8E"
                     />
                   </View>
 

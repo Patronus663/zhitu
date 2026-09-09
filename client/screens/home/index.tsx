@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { planApi } from '@/utils/api';
+import { SmartDateInput } from '@/components/SmartDateInput';
 import { FontAwesome6 } from '@expo/vector-icons';
 
 export default function HomeScreen() {
@@ -521,13 +522,12 @@ export default function HomeScreen() {
                       onChangeText={setNewTaskDesc}
                       multiline
                     />
-                    <Text style={styles.addLabel}>截止日期</Text>
-                    <TextInput
-                      style={styles.addInput}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#9CA3AF"
-                      value={newTaskDate}
-                      onChangeText={setNewTaskDate}
+                    <SmartDateInput
+                      label="截止日期"
+                      value={newTaskDate || null}
+                      onChange={setNewTaskDate}
+                      containerStyle={{ marginBottom: 0 }}
+                      iconColor="#7B2D8E"
                     />
                   </View>
                   <View style={styles.moveActions}>

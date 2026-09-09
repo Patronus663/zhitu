@@ -2,6 +2,7 @@ import { Screen } from '@/components/Screen';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useUser } from '@/contexts/UserContext';
 import { planApi } from '@/utils/api';
+import { SmartDateInput } from '@/components/SmartDateInput';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -244,22 +245,22 @@ export default function MyPlansScreen() {
                       numberOfLines={3}
                     />
 
-                    <Text style={styles.inputLabel}>开始日期</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newStartDate}
-                      onChangeText={setNewStartDate}
-                      placeholder="YYYY-MM-DD（可选）"
-                      placeholderTextColor="#9CA3AF"
+                    <SmartDateInput
+                      label="开始日期"
+                      value={newStartDate || null}
+                      onChange={setNewStartDate}
+                      placeholder="可选"
+                      containerStyle={{ marginBottom: 12 }}
+                      iconColor="#7B2D8E"
                     />
 
-                    <Text style={styles.inputLabel}>结束日期</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newEndDate}
-                      onChangeText={setNewEndDate}
-                      placeholder="YYYY-MM-DD（可选）"
-                      placeholderTextColor="#9CA3AF"
+                    <SmartDateInput
+                      label="结束日期"
+                      value={newEndDate || null}
+                      onChange={setNewEndDate}
+                      placeholder="可选"
+                      containerStyle={{ marginBottom: 0 }}
+                      iconColor="#7B2D8E"
                     />
                   </View>
 
