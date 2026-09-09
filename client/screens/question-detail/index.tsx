@@ -5,6 +5,7 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useFocusEffect } from 'expo-router';
 import { questionApi } from '@/utils/api';
+import { shareQuestion } from '@/utils/share';
 
 interface QuestionDetail {
   id: string;
@@ -235,7 +236,7 @@ export default function QuestionDetailScreen() {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                Alert.alert('提示', '编辑功能开发中');
+                router.push('/question-edit', { questionId: question.id });
               }}
             >
               <FontAwesome6 name="pen" size={18} color="#374151" />
@@ -246,7 +247,7 @@ export default function QuestionDetailScreen() {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                Alert.alert('提示', '分享功能开发中');
+                shareQuestion(question);
               }}
             >
               <FontAwesome6 name="share-nodes" size={18} color="#374151" />

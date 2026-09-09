@@ -134,6 +134,15 @@ export const questionApi = {
   },
   /**
    * 服务端文件：server/src/routes/questions.ts
+   * 接口：PUT /api/v1/questions/:id
+   * Path 参数：id: string
+   * Body 参数：content?/answer?/images?/subject?/question_type?/knowledge_points?/methods?/difficulty?（仅创建者）
+   *           wrong_answer?/error_analysis?/is_mastered?（本人错题记录）
+   */
+  updateQuestion: (questionId: string, data: Record<string, any>) =>
+    request<any>(`/api/v1/questions/${questionId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  /**
+   * 服务端文件：server/src/routes/questions.ts
    * 接口：DELETE /api/v1/questions/:id
    * Path 参数：id: string
    */

@@ -327,6 +327,71 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// PUT /api/v1/questions/:id - Update a question (creator edits question fields; own personal record too)
+router.put('/:id', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const questionId = req.params.id;
+    const userId = req.authUserId;
+
+    const { data: question, error: getErr } = await client
+      .from('questions')
+      .select('id, created_by')
+      .eq('id', questionId)
+      .maybeSingle();
+    if (getErr) throw new Error(`查询失败: ${getErr.message}`);
+    if (!question) return res.status(404).json({ error: '题目不存在' });
+    if (question.created_by !== userId) {
+      return res.status(403).json({ error: '仅题目创建者可以编辑' });
+    }
+
+    const {
+      content, answer, images, subject, question_type,
+      knowledge_points, methods, difficulty,
+      wrong_answer, error_analysis, is_mastered,
+    } = req.body;
+
+    const questionUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (content !== undefined) questionUpdate.content = content;
+    if (answer !== undefined) questionUpdate.answer = answer;
+    if (images !== undefined) questionUpdate.images = images;
+    if (subject !== undefined) questionUpdate.subject = subject;
+    if (question_type !== undefined) questionUpdate.question_type = question_type;
+    if (knowledge_points !== undefined) questionUpdate.knowledge_points = knowledge_points;
+    if (methods !== undefined) questionUpdate.methods = methods;
+    if (difficulty !== undefined) questionUpdate.difficulty = difficulty;
+
+    const { data: updatedQuestion, error: qErr } = await client
+      .from('questions')
+      .update(questionUpdate)
+      .eq('id', questionId)
+      .select()
+      .single();
+    if (qErr) throw new Error(`更新题目失败: ${qErr.message}`);
+
+    // Update the caller's personal record if provided
+    let updatedUserQuestion = null;
+    const uqUpdate: Record<string, any> = {};
+    if (wrong_answer !== undefined) uqUpdate.wrong_answer = wrong_answer;
+    if (error_analysis !== undefined) uqUpdate.error_analysis = error_analysis;
+    if (is_mastered !== undefined) uqUpdate.is_mastered = is_mastered;
+    if (Object.keys(uqUpdate).length > 0) {
+      const { data: uq } = await client
+        .from('user_questions')
+        .update(uqUpdate)
+        .eq('question_id', questionId)
+        .eq('user_id', userId)
+        .select()
+        .maybeSingle();
+      updatedUserQuestion = uq;
+    }
+
+    res.json({ question: updatedQuestion, user_question: updatedUserQuestion });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/v1/questions/:id - Delete a question (scoped: own link always; cloud row only by creator)
 router.delete('/:id', async (req, res) => {
   try {

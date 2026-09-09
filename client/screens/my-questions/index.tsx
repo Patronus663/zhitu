@@ -6,6 +6,7 @@ import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useUser } from '@/contexts/UserContext';
 import { questionApi } from '@/utils/api';
+import { shareQuestion } from '@/utils/share';
 
 interface Question {
   id: string;
@@ -129,8 +130,7 @@ export default function MyQuestionsScreen() {
         }
         break;
       case 'share':
-        // 分享功能：预留扩展
-        Alert.alert('提示', '分享功能开发中');
+        shareQuestion(selectedQuestion);
         break;
     }
   };
