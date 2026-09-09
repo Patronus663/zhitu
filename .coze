@@ -1,0 +1,17 @@
+[project]
+entrypoint = "server.js"
+requires = [ "nodejs-24" ]
+project_type = "app"
+template = "expo"
+version = "0.0.35"
+appliedPatches = [ ]
+
+[dev]
+build = [ "bash", ".cozeproj/scripts/dev_build.sh" ]
+run = [ "bash", ".cozeproj/scripts/dev_run.sh" ]
+validate = [ "bash", ".cozeproj/scripts/validate.sh" ]
+
+[deploy]
+build = [ "bash", ".cozeproj/scripts/prod_build.sh" ]
+run = [ "bash", ".cozeproj/scripts/prod_run.sh" ]
+build_app_dir = "./client"
