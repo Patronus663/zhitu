@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
+import { getSupabaseCredentials } from './storage/database/supabase-client.js';
 import userRoutes from './routes/users.js';
 import questionRoutes from './routes/questions.js';
 import searchRoutes from './routes/search.js';
@@ -19,6 +20,16 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Health check
 app.get('/api/v1/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
+});
+
+// Supabase 前端初始化配置（anonKey 为可公开的客户端 key，仅用于前端创建 supabase 客户端）
+app.get('/api/v1/supabase-config', (_req, res) => {
+  try {
+    const creds = getSupabaseCredentials();
+    res.status(200).json({ url: creds.url, anonKey: creds.anonKey });
+  } catch (e) {
+    res.status(500).json({ error: 'supabase 配置不可用' });
+  }
 });
 
 // Routes

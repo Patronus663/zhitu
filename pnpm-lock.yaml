@@ -48,6 +48,9 @@ importers:
       '@react-navigation/native':
         specifier: ^7.0.14
         version: 7.1.28(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@supabase/supabase-js':
+        specifier: 2.95.3
+        version: 2.95.3
       dayjs:
         specifier: ^1.11.20
         version: 1.11.20

@@ -1,47 +1,94 @@
 // @ts-nocheck
 /**
- * 通用认证上下文
+ * 通用认证上下文（基于 Supabase Auth）
  *
- * 基于固定的 API 接口实现，可复用到其他项目
- * 其他项目使用时，只需修改 @api 的导入路径指向项目的 api 模块
- *
- * 注意：
- * - 如果需要登录/鉴权场景，请扩展本文件，完善 login/logout、token 管理、用户信息获取与刷新等逻辑
- * - 将示例中的占位实现替换为项目实际的接口调用与状态管理
+ * 提供邮箱密码的登录 / 注册 / 登出，并维护 session 状态。
+ * session 持久化于 AsyncStorage，可通过 x-session 请求头用于业务接口鉴权。
  */
-import React, { createContext, useContext, ReactNode } from "react";
-
-interface UserOut {
-
-}
+import React, { createContext, useContext, ReactNode, useEffect, useState, useCallback } from "react";
+import type { User } from "@supabase/supabase-js";
+import { getSupabase } from "@/utils/supabase";
 
 interface AuthContextType {
-  user: UserOut | null;
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<UserOut>) => void;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    let subscription: { unsubscribe: () => void } | undefined;
+
+    (async () => {
+      try {
+        const sb = await getSupabase();
+        const { data } = await sb.auth.getSession();
+        if (mounted) {
+          setUser(data.session?.user ?? null);
+          setToken(data.session?.access_token ?? null);
+        }
+        const { data: subData } = sb.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null);
+          setToken(session?.access_token ?? null);
+        });
+        subscription = subData.subscription;
+      } catch (e) {
+        console.error("Auth init failed", e);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const sb = await getSupabase();
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    const sb = await getSupabase();
+    const { error } = await sb.auth.signUp({ email, password });
+    if (error) throw error;
+  }, []);
+
+  const logout = useCallback(async () => {
+    const sb = await getSupabase();
+    await sb.auth.signOut();
+    setUser(null);
+    setToken(null);
+  }, []);
+
+  const updateUser = useCallback((userData: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...userData } : prev));
+  }, []);
+
   const value: AuthContextType = {
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: false,
-
-    // 登录逻辑，根据项目实际情况实现
-    login: async (token: string) => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-
-    // 登出逻辑，根据项目实际情况实现
-    logout: async () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-
-    // 更新用户信息，根据项目实际情况实现
-    updateUser: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+    user,
+    token,
+    isAuthenticated: !!user && !!token,
+    isLoading,
+    login,
+    signUp,
+    logout,
+    updateUser,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
