@@ -192,7 +192,7 @@ router.post('/', async (req, res) => {
         .eq('plan_type', 'daily');
     }
 
-    // Create plan
+    // Create plan（daily 互斥下线已在上面处理，两种类型都默认激活）
     const { data: plan, error: planErr } = await client
       .from('study_plans')
       .insert({
@@ -201,7 +201,7 @@ router.post('/', async (req, res) => {
         description,
         start_date,
         end_date,
-        is_active: effectivePlanType === 'daily',
+        is_active: true,
         plan_type: effectivePlanType,
       })
       .select()
@@ -459,30 +459,33 @@ router.get('/overdue/:user_id', async (req, res) => {
     const client = getSupabaseClient();
     const today = new Date().toISOString().split('T')[0];
 
-    // Get active daily plan for user
-    const { data: plan } = await client
+    // Get all active plans (daily + long_term)
+    const { data: plans } = await client
       .from('study_plans')
-      .select('id')
+      .select('id, title')
       .eq('user_id', req.authUserId)
-      .eq('is_active', true)
-      .eq('plan_type', 'daily')
-      .single();
+      .eq('is_active', true);
 
-    if (!plan) {
+    if (!plans || plans.length === 0) {
       return res.json({ overdue_items: [] });
     }
+
+    const planIds = plans.map((p: any) => p.id);
+    const titleMap: Record<string, string> = {};
+    for (const p of plans) titleMap[p.id] = p.title;
 
     // Get incomplete tasks with due_date < today
     const { data: overdueItems, error } = await client
       .from('plan_items')
       .select('*')
-      .eq('plan_id', plan.id)
+      .in('plan_id', planIds)
       .lt('due_date', today)
       .eq('is_completed', false)
       .order('due_date', { ascending: true });
 
     if (error) throw new Error(`查询失败: ${error.message}`);
-    res.json({ overdue_items: overdueItems || [] });
+    const items = (overdueItems || []).map((it: any) => ({ ...it, plan_title: titleMap[it.plan_id] }));
+    res.json({ overdue_items: items });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -494,24 +497,24 @@ router.post('/move-overdue/:user_id', async (req, res) => {
     const client = getSupabaseClient();
     const today = new Date().toISOString().split('T')[0];
 
-    // Get active daily plan for user
-    const { data: plan } = await client
+    // Get all active plans (daily + long_term)
+    const { data: plans } = await client
       .from('study_plans')
       .select('id')
       .eq('user_id', req.authUserId)
-      .eq('is_active', true)
-      .eq('plan_type', 'daily')
-      .single();
+      .eq('is_active', true);
 
-    if (!plan) {
+    if (!plans || plans.length === 0) {
       return res.json({ moved: 0 });
     }
+
+    const planIds = plans.map((p: any) => p.id);
 
     // Update all incomplete tasks with due_date < today to today
     const { data, error, count } = await client
       .from('plan_items')
       .update({ due_date: today })
-      .eq('plan_id', plan.id)
+      .in('plan_id', planIds)
       .lt('due_date', today)
       .eq('is_completed', false)
       .select();
@@ -523,33 +526,41 @@ router.post('/move-overdue/:user_id', async (req, res) => {
   }
 });
 
-// GET /api/v1/plans/:user_id/today - Get today's and this week's tasks
+// GET /api/v1/plans/:user_id/today - Get today's and this week's tasks (across all active plans)
 router.get('/:user_id/today', async (req, res) => {
   try {
     const client = getSupabaseClient();
     const today = new Date().toISOString().split('T')[0];
     const weekEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    // Get active daily plan
+    // Get all active plans (daily + long_term)
     const { data: plans } = await client
       .from('study_plans')
-      .select('id')
+      .select('id, title')
       .eq('user_id', req.authUserId)
-      .eq('is_active', true)
-      .eq('plan_type', 'daily')
-      .limit(1);
+      .eq('is_active', true);
 
     if (!plans || plans.length === 0) {
-      return res.json({ today_items: [], week_items: [] });
+      return res.json({
+        today_items: [],
+        week_items: [],
+        stats: {
+          today: { total: 0, completed: 0 },
+          week: { total: 0, completed: 0 },
+        },
+      });
     }
 
-    const planId = plans[0].id;
+    const planIds = plans.map((p: any) => p.id);
+    const titleMap: Record<string, string> = {};
+    for (const p of plans) titleMap[p.id] = p.title;
+    const withPlanTitle = (it: any) => ({ ...it, plan_title: titleMap[it.plan_id] });
 
     // Today's items - only items due today (not yesterday or earlier)
     const { data: todayItems } = await client
       .from('plan_items')
       .select('*')
-      .eq('plan_id', planId)
+      .in('plan_id', planIds)
       .eq('due_date', today)
       .eq('is_completed', false)
       .order('sort_order', { ascending: true });
@@ -558,7 +569,7 @@ router.get('/:user_id/today', async (req, res) => {
     const { data: weekItems } = await client
       .from('plan_items')
       .select('*')
-      .eq('plan_id', planId)
+      .in('plan_id', planIds)
       .gt('due_date', today)
       .lte('due_date', weekEnd)
       .eq('is_completed', false)
@@ -568,7 +579,7 @@ router.get('/:user_id/today', async (req, res) => {
     const { data: allTodayItems } = await client
       .from('plan_items')
       .select('id, is_completed')
-      .eq('plan_id', planId)
+      .in('plan_id', planIds)
       .eq('due_date', today);
 
     const todayTotal = allTodayItems ? allTodayItems.length : 0;
@@ -578,7 +589,7 @@ router.get('/:user_id/today', async (req, res) => {
     const { data: allWeekItems } = await client
       .from('plan_items')
       .select('id, is_completed')
-      .eq('plan_id', planId)
+      .in('plan_id', planIds)
       .gt('due_date', today)
       .lte('due_date', weekEnd);
 
@@ -586,8 +597,8 @@ router.get('/:user_id/today', async (req, res) => {
     const weekCompleted = allWeekItems ? allWeekItems.filter(i => i.is_completed).length : 0;
 
     res.json({
-      today_items: todayItems || [],
-      week_items: weekItems || [],
+      today_items: (todayItems || []).map(withPlanTitle),
+      week_items: (weekItems || []).map(withPlanTitle),
       stats: {
         today: { total: todayTotal || 0, completed: todayCompleted || 0 },
         week: { total: weekTotal || 0, completed: weekCompleted || 0 },

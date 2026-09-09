@@ -318,6 +318,9 @@ export default function HomeScreen() {
                   <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
                     {item.title}
                   </Text>
+                  {item.plan_title ? (
+                    <Text style={styles.taskPlan} numberOfLines={1}>{item.plan_title}</Text>
+                  ) : null}
                   {item.description ? (
                     <Text style={styles.taskDesc} numberOfLines={1}>{item.description}</Text>
                   ) : null}
@@ -380,6 +383,9 @@ export default function HomeScreen() {
                   <Text style={[styles.taskTitle, item.is_completed && styles.taskTitleDone]}>
                     {item.title}
                   </Text>
+                  {item.plan_title ? (
+                    <Text style={styles.taskPlan} numberOfLines={1}>{item.plan_title}</Text>
+                  ) : null}
                   <Text style={styles.taskDate}>{item.due_date}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuBtn} onPress={() => openMenu(item)}>
@@ -608,6 +614,7 @@ const styles = StyleSheet.create({
   taskTitle: { fontSize: 15, fontWeight: '500', color: '#1A1A2E' },
   taskTitleDone: { color: '#9CA3AF', textDecorationLine: 'line-through' },
   taskDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  taskPlan: { fontSize: 11, color: '#7B2D8E', marginTop: 2 },
   taskDate: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
   menuBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
