@@ -17,7 +17,7 @@
 | 前端样式 | TailwindCSS（Uniwind）+ StyleSheet | `client/global.css` 主题设计令牌 |
 | 状态/存储 | React Context、AsyncStorage、@supabase/supabase-js | AuthContext / UserContext |
 | 后端 | Express.js（ESM + TypeScript） | `server/src/` |
-| 数据库 | Supabase（PostgreSQL + Drizzle ORM） | 10 张表 |
+| 数据库 | Supabase（PostgreSQL） | 经 supabase-js 访问，共 9 张表 |
 | AI 能力 | 豆包 doubao-seed（LLM，`server/src/services/llm.ts`） | 判题、学情、计划、答题、聊天(SSE) |
 | 联网检索 | 豆包 Web Search + 云端题库 | 题库不足时联网补充 |
 | 认证 | Supabase Auth（邮箱 + 密码） | `x-session` 头部 |
@@ -26,11 +26,11 @@
 
 ## 三、功能模块
 
-1. **错题整理**：拍照 / 文字输入 → AI 图像识别（`analyze-image`）→ AI 判题与解答（`ai-answer`）→ 标签生成与校验（`analyze` / `validate-tags`）→ 录入（同时写入云端题库 `questions` 与个人错题库 `user_questions`）→ 错因分析写入学情。
+1. **错题整理**：拍照 / 文字输入 → AI 图像识别（`analyze-image`）→ AI 判题与解答（`ai-answer`）→ 标签生成与校验（`analyze` / `validate-tags`）→ 录入（同时写入云端题库 `questions` 与个人错题库 `user_questions`）→ 错因分析写入学情。支持后续**编辑**（`PUT /questions/:id`，仅创建者）与**分享**（RN Share API，Web 端降级为复制剪贴板）。
 2. **题目检索**：选择范围（云端 / 个人错题），输入学科、知识点、方法、数量描述 → 大模型解析意图并按相关性/评分检索；题库不足时调用 `web_search` 联网补充并标注"来源于网络"；支持题目评分、反馈题目有误。
 3. **学情分析**：读取用户学情长文本，结合学习计划生成 AI 建议；支持文字反馈修正学情。
-4. **计划制定 / 跟进**：AI 生成学习计划（`plan_type` 区分 `daily` 与 `long_term`，长期计划只进"我的计划"）；今日/本周任务、完成打勾、进度统计、逾期任务迁移。
-5. **和知途聊聊**：SSE 流式对话，结合用户学情/计划的 AI 问答，保存互动记录。
+4. **计划制定 / 跟进**：AI 生成学习计划（`plan_type` 区分 `daily` 与 `long_term`，两者均可活跃并跟进）；今日/本周任务（覆盖所有活跃计划，任务携带 `plan_title`）、完成打勾、进度统计、逾期任务迁移。生成计划时可指定 `duration_days`（7/14/30/60 天），AI 会按时长约束起止日期与任务数量。
+5. **和知途聊聊**：SSE 流式对话（`react-native-sse`，失败自动降级为非流式），结合用户学情/计划的 AI 问答，保存互动记录。
 6. **用户与认证**：Supabase Auth 邮箱登录/注册；首次使用引导页（onboarding）收集称呼、专业、年级、目标等初始化用户学情。
 7. **云端题库**：内置微积分 I / II 历年期末真题（2012–2024，经大模型规范化为结构化题目：题干、答案、知识点、方法、难度），与用户录入错题共享 `questions` 表。
 
@@ -58,9 +58,10 @@
 ├── server/                     # Express 后端
 │   ├── src/
 │   │   ├── index.ts            # 入口，挂载 /api/v1 各资源路由
+│   │   ├── middleware/auth.ts  # requireAuth 鉴权中间件（校验 x-session JWT）
 │   │   ├── routes/             # users/questions/search/learning/plans/chat
 │   │   ├── services/llm.ts     # 大模型调用封装
-│   │   └── storage/database/   # supabase-client + Drizzle schema
+│   │   └── storage/database/   # supabase-client（env 读取 + workload identity 兜底）
 │   └── scripts/                # 题库导入 / LaTeX 清理等维护脚本
 ├── .coze / .cozeproj           # 脚手架配置（禁止修改）
 └── package.json                # monorepo 根
@@ -86,7 +87,7 @@
 
 ## 六、后端 REST API（统一前缀 `/api/v1`）
 
-> 认证：登录相关接口使用 Supabase Auth，前端通过 `x-session` 头携带 access_token（当前业务接口沿用基于 `user_id` 参数的鉴权体系）。
+> 认证：全部业务接口经 `requireAuth` 中间件校验 `x-session` 头（兼容 `Authorization: Bearer`），通过 Supabase `auth.getUser` 解析出 auth uid（`req.authUserId`）并以其作为数据归属；客户端传入的 `user_id` 参数不再被信任，仅保留路径兼容。计划/任务的增删改端点额外校验所有权（403）。
 
 ### 系统
 - `GET /api/v1/health` — 健康检查
@@ -105,7 +106,8 @@
 - `POST /` 错题录入（写入云端 `questions` + 个人 `user_questions`，自动补全标签）
 - `GET /` 云端/个人列表
 - `GET /:id` 题目详情
-- `DELETE /:id` 删除题目
+- `PUT /:id` 编辑题目（仅创建者可改云端字段；`wrong_answer`/`error_analysis`/`is_mastered` 更新本人错题记录）
+- `DELETE /:id` 删除题目（只删本人关联；云端题仅创建者可删，且他人仍在使用时仅停用）
 - `POST /:id/rate` 题目评分
 - `POST /:id/report` 反馈题目有误
 
@@ -124,10 +126,10 @@
 ### plans（`/api/v1/plans`）
 - `GET /:user_id` 我的全部计划（含 total_items / completed_items）
 - `GET /:user_id/active` 活跃计划
-- `GET /:user_id/today` 今日任务（due_date == today）
+- `GET /:user_id/today` 今日任务（due_date == today，覆盖所有活跃计划，含 `plan_title`）
 - `GET /overdue/:user_id` 逾期任务
 - `POST /move-overdue/:user_id` 逾期任务迁移到今日
-- `POST /generate` AI 生成学习计划
+- `POST /generate` AI 生成学习计划（支持 `duration_days` 指定时长）
 - `POST /` 创建计划（支持计划与任务一次创建）
 - `DELETE /:plan_id` 删除计划
 - `GET /detail/:plan_id` 计划详情
@@ -163,9 +165,10 @@
 ## 八、登录认证（Supabase Auth）
 
 - 前端通过 `GET /api/v1/supabase-config` 获取 `{ url, anonKey }` 初始化 supabase 客户端（`client/utils/supabase.ts`）。
-- `client/contexts/AuthContext.tsx` 提供 `signIn / signUp / logout / user / token / isAuthenticated / updateUser`，session 持久化于 AsyncStorage，`onAuthStateChange` 自动同步登录态。
-- 登录页 `client/screens/login/index.tsx`：邮箱 + 密码的登录/注册切换，南大风格 UI。
-- 「我的」页提供登录 / 注册入口与退出登录。
+- `client/contexts/AuthContext.tsx` 提供 `signIn / signUp / logout / user / token / isAuthenticated / updateUser`，session 持久化于 AsyncStorage，`onAuthStateChange` 自动同步登录态，token 同步注入 api 层（`x-session` 头）。
+- **业务用户与账号一一对应**：`users.id` 即 Supabase auth uid，`UserContext` 按登录态自动加载/清空业务用户，登录登出真正联动数据。
+- **启动门控三段式**（`client/app/index.tsx`）：未登录 → `/login`；已登录无业务档案 → `/onboarding`；已有档案 → `/(tabs)`。
+- 登录页支持登录/注册切换；注册后若 Supabase 开启邮箱确认则提示先验证（建议在 Supabase 后台关闭「Confirm email」以实现注册即登录）。
 - 说明：Supabase 默认邮箱需验证后才发放 session；如需"注册即登录"须在 Supabase 后台关闭"确认邮箱"或配置 SMTP。
 
 ---
@@ -209,6 +212,7 @@ pnpm -w lint:server   # 仅后端
 | `import_qbank.ts` | 把期末试卷 txt 规范化（调 LLM）并批量导入云端题库 |
 | `complete_answers.ts` | 为缺答案的题目调用 LLM 补全答案 |
 | `convert_tex.ts` | 将题库中的 LaTeX 命令（\frac、\sqrt 等）转换为可读数学符号 |
+| `parse_pdf.mjs` | 从命令行参数给定的 PDF URL 抽取文本到 `/tmp/pdf_content.txt`（签名 URL 会过期，禁止硬编码进仓库） |
 
 ---
 

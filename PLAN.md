@@ -80,54 +80,54 @@
 ### 阶段 1：鉴权与账号关联（地基，最先做）
 
 **后端**
-- [ ] 新增 `requireAuth` 中间件：读取 `x-session`（兼容 `Authorization: Bearer`）→ `supabase.auth.getUser(token)` 校验 → 挂 `req.authUserId`，失败返回 401；挂载到全部业务路由（`health`、`supabase-config` 豁免）
-- [ ] 全部 6 个路由文件将信任的 `user_id` 参数替换为 `req.authUserId`（URL 参数仅保留兼容，不再采信）
-- [ ] `users.ts POST`：insert 时写入 `id = authUid`（业务用户主键对齐 Supabase auth uid）；`is_onboarded` 按实际数据写入
-- [ ] 修复删除污染：`DELETE /questions/:id` 只删自己的 `user_questions` 关联；云端题仅 `created_by` 本人可删
-- [ ] 统一评分逻辑：`search /rate` 改为增量平均
-- [ ] `index.ts` 补通用错误处理 + 404 handler
+- [x] 新增 `requireAuth` 中间件：读取 `x-session`（兼容 `Authorization: Bearer`）→ `supabase.auth.getUser(token)` 校验 → 挂 `req.authUserId`，失败返回 401；挂载到全部业务路由（`health`、`supabase-config` 豁免）
+- [x] 全部 6 个路由文件将信任的 `user_id` 参数替换为 `req.authUserId`（URL 参数仅保留兼容，不再采信）
+- [x] `users.ts POST`：insert 时写入 `id = authUid`（业务用户主键对齐 Supabase auth uid）；`is_onboarded` 按实际数据写入
+- [x] 修复删除污染：`DELETE /questions/:id` 只删自己的 `user_questions` 关联；云端题仅 `created_by` 本人可删
+- [x] 统一评分逻辑：`search /rate` 改为增量平均
+- [x] `index.ts` 补通用错误处理 + 404 handler
 
 **前端**
-- [ ] `api.ts`：模块级 token 注入（`setApiAuthToken()`），`request()` 自动携带 `x-session`
-- [ ] `AuthContext`：登录态变化时同步 token 给 api 层；移除 `@ts-nocheck` 修复类型
-- [ ] `UserContext`：业务用户按 auth uid 查找/创建；`app/index.tsx` 门控改为**登录 → onboarding → 主界面**三段式
+- [x] `api.ts`：模块级 token 注入（`setApiAuthToken()`），`request()` 自动携带 `x-session`
+- [x] `AuthContext`：登录态变化时同步 token 给 api 层；移除 `@ts-nocheck` 修复类型
+- [x] `UserContext`：业务用户按 auth uid 查找/创建；`app/index.tsx` 门控改为**登录 → onboarding → 主界面**三段式
 - [ ] 运维动作（Supabase 后台）：关闭「Confirm email」，否则注册后拿不到 session
 
 ### 阶段 2：长期计划跟进
 
-- [ ] `plans.ts`：long_term 创建时 `is_active: true`；互斥下线逻辑仅作用于 daily 之间
-- [ ] `/today`、`/overdue`、`/move-overdue` 去掉 `plan_type='daily'` 硬编码，改为查询用户**所有活跃计划**的任务；响应携带 `plan_title`
-- [ ] 前端 home 任务卡片显示所属计划名
+- [x] `plans.ts`：long_term 创建时 `is_active: true`；互斥下线逻辑仅作用于 daily 之间
+- [x] `/today`、`/overdue`、`/move-overdue` 去掉 `plan_type='daily'` 硬编码，改为查询用户**所有活跃计划**的任务；响应携带 `plan_title`
+- [x] 前端 home 任务卡片显示所属计划名
 
 ### 阶段 3：编辑 + 分享
 
-- [ ] 后端新增 `PUT /api/v1/questions/:id`：更新题目字段 + 本人 `user_questions`（wrong_answer / error_analysis）
-- [ ] 新增 `/question-edit` 路由 + 编辑页（表单预填，标签编辑复用 question-entry 交互模式）
-- [ ] 分享：RN 内置 `Share.share` 文本摘要（题干+答案+错因），零新依赖；my-questions 与 question-detail 共用工具函数
+- [x] 后端新增 `PUT /api/v1/questions/:id`：更新题目字段 + 本人 `user_questions`（wrong_answer / error_analysis）
+- [x] 新增 `/question-edit` 路由 + 编辑页（表单预填，标签编辑复用 question-entry 交互模式）
+- [x] 分享：RN 内置 `Share.share` 文本摘要（题干+答案+错因），零新依赖；my-questions 与 question-detail 共用工具函数
 
 ### 阶段 4：聊天 SSE 流式
 
-- [ ] chat 页接入 `react-native-sse`（支持 POST + body），流式追加助手消息 + 输入中指示器；失败自动降级阻塞接口
-- [ ] 风险预案：若真机 POST 流异常，改用 `expo/fetch` 手动解析流
+- [x] chat 页接入 `react-native-sse`（支持 POST + body），流式追加助手消息 + 输入中指示器；失败自动降级阻塞接口
+- [x] 风险预案：若真机 POST 流异常，改用 `expo/fetch` 手动解析流
 
 ### 阶段 5：计划时长生效 + 联网题详情
 
-- [ ] `/plans/generate` 接收 `duration_days`，写入 prompt 并约束起止日期与任务数；前端真正传递已选时长
-- [ ] 检索页网络来源题目：通过 `useSafeRouter` 的 Base64 payload 直传整题数据给 question-detail（展示模式，隐藏删除等操作）
+- [x] `/plans/generate` 接收 `duration_days`，写入 prompt 并约束起止日期与任务数；前端真正传递已选时长
+- [x] 检索页网络来源题目：通过 `useSafeRouter` 的 Base64 payload 直传整题数据给 question-detail（展示模式，隐藏删除等操作）
 
 ### 阶段 6：空文档与死代码清理
 
-- [ ] 根 `tsconfig.json` 写入正经的 monorepo 基础配置
-- [ ] 删除 Drizzle 死栈（schema.ts / relations.ts / drizzle-orm / drizzle-kit / drizzle-zod / pg 等零引用依赖）
-- [ ] `parse_pdf.mjs` 硬编码签名 URL 移除，改为参数/环境变量传入
-- [ ] `depcheck` 核实后清理未用依赖
-- [ ] `SmartDateInput` 接入 my-plans / plan-detail / home 的日期输入
+- [x] 根 `tsconfig.json` 写入正经的 monorepo 基础配置
+- [x] 删除 Drizzle 死栈（schema.ts / relations.ts / drizzle-orm / drizzle-kit / drizzle-zod / pg 等零引用依赖）
+- [x] `parse_pdf.mjs` 硬编码签名 URL 移除，改为参数/环境变量传入
+- [x] `depcheck` 核实后清理未用依赖
+- [x] `SmartDateInput` 接入 my-plans / plan-detail / home 的日期输入
 
 ### 阶段 7：验证与文档
 
-- [ ] 每阶段执行 `pnpm -w lint:all`
-- [ ] 后端接口 curl + 真实 Supabase token 冒烟（需提供 `COZE_SUPABASE_URL` / `COZE_SUPABASE_ANON_KEY`，或在 Coze dev 环境运行）
-- [ ] 更新 `PROJECT_DOC.md`（鉴权说明、新端点、编辑/分享功能）
+- [x] 每阶段执行 `pnpm -w lint:all`（server tsc ✓ / client tsc+eslint ✓）
+- [ ] 后端接口 curl + 真实 Supabase token 冒烟（待提供 `COZE_SUPABASE_URL` / `COZE_SUPABASE_ANON_KEY`，或在 Coze dev 环境运行）
+- [x] 更新 `PROJECT_DOC.md`（鉴权说明、新端点、编辑/分享功能）
 
 > ⚠️ **数据迁移注意**：业务用户主键改为 auth uid 后，现有测试数据（旧 user id 关联的错题/计划）会失联。开发阶段默认接受重新开始；如需保留数据，需先写迁移脚本。
 
