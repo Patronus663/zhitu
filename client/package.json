@@ -7,7 +7,7 @@
     "check-deps": "npx depcheck",
     "postinstall": "npm run install-missing",
     "install-missing": "node ./scripts/install-missing-deps.js",
-    "lint": "tsc --noEmit; eslint ./ -f ./scripts/formatter.mjs --quiet",
+    "lint": "tsc --noEmit && eslint ./ -f ./scripts/formatter.mjs --quiet",
     "start": "expo start --web --clear",
     "test": "jest --watchAll"
   },
