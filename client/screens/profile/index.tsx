@@ -74,7 +74,7 @@ export default function ProfileScreen() {
                 <Text style={styles.accountLabel}>已登录</Text>
                 <Text style={styles.accountEmail} numberOfLines={1}>{authUser?.email || '账号已登录'}</Text>
               </View>
-              <TouchableOpacity style={styles.logoutBtn} onPress={async () => { await logout(); }}>
+              <TouchableOpacity style={styles.logoutBtn} onPress={async () => { await logout(); router.replace('/login'); }}>
                 <Text style={styles.logoutBtnText}>退出登录</Text>
               </TouchableOpacity>
             </>

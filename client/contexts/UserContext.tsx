@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
 import { userApi } from '@/utils/api';
 
 interface User {
@@ -34,29 +34,35 @@ const UserContext = createContext<UserContextType>({
   refreshUser: async () => {},
 });
 
-const USER_ID_KEY = '@zhitu_user_id';
-
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  // 业务用户与 Supabase 账号一一对应（users.id = auth uid），随登录态自动加载/清空
+  const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadUser = useCallback(async () => {
-    try {
-      const storedId = await AsyncStorage.getItem(USER_ID_KEY);
-      if (storedId) {
-        const result = await userApi.get(storedId);
-        setUser(result.user);
-      }
-    } catch {
-      // User not found or error
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+    let cancelled = false;
+    if (authLoading) return;
+    if (!isAuthenticated || !authUser) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        const result = await userApi.get(authUser.id);
+        if (!cancelled) setUser(result.user);
+      } catch {
+        // 未创建业务用户（等待 onboarding）或接口异常
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAuthenticated, authUser?.id]);
 
   const createUser = useCallback(async (data: Partial<User>) => {
     const result = await userApi.create({
@@ -67,7 +73,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       mastery_expectation: data.mastery_expectation,
       personalized_info: data.personalized_info,
     });
-    await AsyncStorage.setItem(USER_ID_KEY, result.user.id);
     setUser(result.user);
   }, []);
 
@@ -86,7 +91,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   return (
     <UserContext.Provider value={{
       user,
-      isLoading,
+      isLoading: isLoading || authLoading,
       isOnboarded: user?.is_onboarded ?? false,
       createUser,
       updateUser,

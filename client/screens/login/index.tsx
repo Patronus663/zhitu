@@ -12,6 +12,7 @@ import {
 import { Screen } from "@/components/Screen";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSafeRouter } from "@/hooks/useSafeRouter";
+import { userApi } from "@/utils/api";
 import { FontAwesome6 } from "@expo/vector-icons";
 
 export default function LoginScreen() {
@@ -23,6 +24,16 @@ export default function LoginScreen() {
   const [buttonLoading, setButtonLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // 登录成功后按业务用户是否存在分流：已有档案 → 主界面，否则 → 引导页
+  const routeAfterAuth = async (authUserId: string) => {
+    try {
+      await userApi.get(authUserId);
+      router.replace("/(tabs)");
+    } catch {
+      router.replace("/onboarding");
+    }
+  };
+
   const handleSubmit = async () => {
     if (buttonLoading) return;
     if (!email.trim() || !password) {
@@ -33,12 +44,16 @@ export default function LoginScreen() {
     setError("");
     try {
       if (mode === "login") {
-        await login(email.trim(), password);
-        router.replace("/(tabs)");
+        const authUser = await login(email.trim(), password);
+        await routeAfterAuth(authUser.id);
       } else {
-        await signUp(email.trim(), password);
-        setError("注册成功，请前往邮箱完成验证后登录");
-        setMode("login");
+        const { user: authUser, hasSession } = await signUp(email.trim(), password);
+        if (hasSession && authUser) {
+          await routeAfterAuth(authUser.id);
+        } else {
+          setError("注册成功，请前往邮箱完成验证后登录");
+          setMode("login");
+        }
       }
     } catch (e: any) {
       setError(e?.message || (mode === "login" ? "登录失败，请检查邮箱和密码" : "注册失败，请重试"));

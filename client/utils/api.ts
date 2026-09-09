@@ -1,16 +1,28 @@
 const API_BASE = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
+// 登录态 token（由 AuthContext 在登录态变化时注入），业务接口通过 x-session 头携带
+let authToken: string | null = null;
+
+export function setApiAuthToken(token: string | null) {
+  authToken = token;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(authToken ? { 'x-session': authToken } : {}),
       ...options?.headers,
     },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
+    if (res.status === 401) {
+      // 凭证失效：清空本地 token，等待下次登录重新注入
+      authToken = null;
+    }
     throw new Error(err.error || '请求失败');
   }
   return res.json();
@@ -21,6 +33,7 @@ async function uploadFile<T>(path: string, formData: FormData): Promise<T> {
   const res = await fetch(url, {
     method: 'POST',
     body: formData,
+    headers: authToken ? { 'x-session': authToken } : {},
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
