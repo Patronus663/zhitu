@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
@@ -16,6 +16,11 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const innerPress = useRef(0);
+  const [toast, setToast] = useState<string | null>(null);
+  const feedbackTimer = useRef<any>(null);
+  useEffect(() => {
+    return () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); };
+  }, []);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -46,17 +51,15 @@ export default function SearchScreen() {
   };
 
   const handleFeedback = async (questionId: string) => {
+    innerPress.current = Date.now();
     try {
-      const result = await searchApi.feedback(questionId, user?.id);
-      if (result.removed) {
-        setResults(results.filter((r) => r.id !== questionId));
-        alert('题目已移除');
-      } else {
-        alert('题目检查无误，评分已适当降低');
-      }
+      await searchApi.feedback(questionId, user?.id);
     } catch {
-      alert('反馈失败');
+      // 反馈失败不影响提示，后台尽力降低推荐
     }
+    setToast('题目可能有误，已减少此题目推荐');
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = setTimeout(() => setToast(null), 1000);
   };
 
   return (
@@ -168,6 +171,13 @@ export default function SearchScreen() {
           </View>
         )}
       </ScrollView>
+      {toast ? (
+        <View style={styles.toastWrap} pointerEvents="none">
+          <View style={styles.toastBox}>
+            <Text style={styles.toastText}>{toast}</Text>
+          </View>
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -209,4 +219,7 @@ const styles = StyleSheet.create({
   resultTag: { fontSize: 11, color: '#6B7280', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   feedbackBtn: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
   feedbackText: { fontSize: 12, color: '#EF4444' },
+  toastWrap: { position: 'absolute', top: '42%', left: 0, right: 0, alignItems: 'center', zIndex: 999 },
+  toastBox: { backgroundColor: 'rgba(30,30,46,0.94)', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 12, maxWidth: '88%' },
+  toastText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600', textAlign: 'center' },
 });

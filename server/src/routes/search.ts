@@ -291,39 +291,13 @@ router.post('/feedback', async (req, res) => {
       return res.status(404).json({ error: '题目不存在' });
     }
 
-    // Use LLM to check if the question is actually incorrect
-    const prompt = `请检查以下题目是否有误：
-
-题目内容：${question.content}
-答案：${question.answer}
-科目：${question.subject}
-知识点：${JSON.stringify(question.knowledge_points)}
-
-如果题目确实有误，返回 {"is_incorrect": true, "reason": "原因"}
-如果题目无误，返回 {"is_incorrect": false, "reason": "题目正确"}`;
-
-    const messages = [{ role: 'user', content: prompt }];
-    const result = await invokeLLM(messages, { temperature: 0.2 });
-
-    let check;
-    try {
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (jsonMatch) check = JSON.parse(jsonMatch[0]);
-      else check = { is_incorrect: false, reason: '检查完成' };
-    } catch {
-      check = { is_incorrect: false, reason: '检查完成' };
-    }
-
-    if (check.is_incorrect) {
-      // Remove the question
-      await client.from('questions').update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', question_id);
-      res.json({ removed: true, reason: check.reason });
-    } else {
-      // Lower the rating
-      const newRating = Math.max(1, (question.rating || 5) - 0.5);
-      await client.from('questions').update({ rating: newRating, updated_at: new Date().toISOString() }).eq('id', question_id);
-      res.json({ removed: false, reason: check.reason });
-    }
+    // Reduce recommendation weight: lower the question's rating on each report
+    const newRating = Math.max(1, (question.rating ?? 5) - 0.5);
+    await client
+      .from('questions')
+      .update({ rating: newRating, updated_at: new Date().toISOString() })
+      .eq('id', question_id);
+    res.json({ reduced: true, rating: newRating });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

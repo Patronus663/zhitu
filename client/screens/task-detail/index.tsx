@@ -187,7 +187,7 @@ export default function TaskDetailScreen() {
           </View>
           {item.completed_at && (
             <View style={styles.metaRow}>
-              <FontAwesome6 name="check-circle" size={14} color="#16A34A" />
+              <FontAwesome6 name="circle-check" size={14} color="#16A34A" />
               <Text style={styles.metaText}>
                 完成于 {new Date(item.completed_at).toLocaleDateString('zh-CN')}
               </Text>

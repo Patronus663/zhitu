@@ -238,7 +238,7 @@ export default function QuestionDetailScreen() {
                 Alert.alert('提示', '编辑功能开发中');
               }}
             >
-              <FontAwesome6 name="edit" size={18} color="#374151" />
+              <FontAwesome6 name="pen" size={18} color="#374151" />
               <Text style={styles.menuItemText}>编辑题目</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
@@ -249,7 +249,7 @@ export default function QuestionDetailScreen() {
                 Alert.alert('提示', '分享功能开发中');
               }}
             >
-              <FontAwesome6 name="share-alt" size={18} color="#374151" />
+              <FontAwesome6 name="share-nodes" size={18} color="#374151" />
               <Text style={styles.menuItemText}>分享题目</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />

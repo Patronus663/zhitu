@@ -20,6 +20,7 @@ export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [moveModalVisible, setMoveModalVisible] = useState(false);
+  const [quickDatesList, setQuickDatesList] = useState<{ days: number; dateStr: string }[]>([]);
   const [moveDate, setMoveDate] = useState('');
   // Add task modal state
   const [addModalVisible, setAddModalVisible] = useState(false);
@@ -144,6 +145,11 @@ export default function HomeScreen() {
       handleDelete(selectedItem.id);
     } else if (action === 'move') {
       setMoveDate(selectedItem.due_date || '');
+      const list = [1, 3, 7].map((days) => {
+        const d = new Date(Date.now() + days * 86400000);
+        return { days, dateStr: d.toISOString().split('T')[0] };
+      });
+      setQuickDatesList(list);
       setMoveModalVisible(true);
     }
   };
@@ -193,7 +199,7 @@ export default function HomeScreen() {
     }
     if (!user) return;
     try {
-      let plans = await planApi.getUserPlans(user.id);
+      const plans = await planApi.getUserPlans(user.id);
       let activePlan = plans.find((p: any) => p.is_active === true && p.plan_type === 'daily');
       // If no active daily plan exists, create a default one
       if (!activePlan) {
@@ -455,20 +461,16 @@ export default function HomeScreen() {
           <View style={styles.moveModal}>
             <Text style={styles.moveTitle}>选择新日期</Text>
             <View style={styles.quickDates}>
-              {[1, 3, 7].map((days) => {
-                const d = new Date(Date.now() + days * 86400000);
-                const dateStr = d.toISOString().split('T')[0];
-                return (
-                  <TouchableOpacity
-                    key={days}
-                    style={styles.quickDateBtn}
-                    onPress={() => setMoveDate(dateStr)}
-                  >
-                    <Text style={styles.quickDateText}>+{days}天</Text>
-                    <Text style={styles.quickDateSub}>{dateStr}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {quickDatesList.map(({ days, dateStr }) => (
+                <TouchableOpacity
+                  key={days}
+                  style={styles.quickDateBtn}
+                  onPress={() => setMoveDate(dateStr)}
+                >
+                  <Text style={styles.quickDateText}>+{days}天</Text>
+                  <Text style={styles.quickDateSub}>{dateStr}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
             <View style={styles.moveActions}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setMoveModalVisible(false)}>

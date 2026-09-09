@@ -129,7 +129,7 @@ export default function MyQuestionsScreen() {
         }
         break;
       case 'share':
-        // TODO: 实现分享功能
+        // 分享功能：预留扩展
         Alert.alert('提示', '分享功能开发中');
         break;
     }
@@ -286,7 +286,7 @@ export default function MyQuestionsScreen() {
               style={styles.menuItem}
               onPress={() => handleMenuAction('share')}
             >
-              <FontAwesome6 name="share-alt" size={18} color="#374151" />
+              <FontAwesome6 name="share-nodes" size={18} color="#374151" />
               <Text style={styles.menuItemText}>分享题目</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
@@ -310,7 +310,7 @@ export default function MyQuestionsScreen() {
       >
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContainer}>
-            <FontAwesome6 name="exclamation-triangle" size={32} color="#DC2626" />
+            <FontAwesome6 name="triangle-exclamation" size={32} color="#DC2626" />
             <Text style={styles.deleteModalTitle}>确认删除</Text>
             <Text style={styles.deleteModalText}>确定要删除这道错题吗？此操作不可撤销。</Text>
             <View style={styles.deleteModalButtons}>
