@@ -211,9 +211,10 @@ router.post('/ai-answer', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     let {
-      user_id, content, answer, images, subject, question_type,
+      content, answer, images, subject, question_type,
       knowledge_points, methods, difficulty, wrong_answer,
     } = req.body;
+    const user_id = req.authUserId;
     if (!Array.isArray(knowledge_points)) knowledge_points = [];
     if (!Array.isArray(methods)) methods = [];
 
@@ -326,25 +327,74 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/v1/questions/:id - Delete a question
+// DELETE /api/v1/questions/:id - Delete a question (scoped: own link always; cloud row only by creator)
 router.delete('/:id', async (req, res) => {
   try {
     const client = getSupabaseClient();
     const questionId = req.params.id;
+    const userId = req.authUserId;
 
-    // First delete from user_questions
-    const { error: uqError } = await client
+    const { data: question, error: getErr } = await client
+      .from('questions')
+      .select('id, created_by')
+      .eq('id', questionId)
+      .maybeSingle();
+    if (getErr) throw new Error(`查询失败: ${getErr.message}`);
+    if (!question) return res.status(404).json({ error: '题目不存在' });
+
+    const isCreator = question.created_by === userId;
+
+    // Check whether the caller has this question in their personal bank
+    const { data: ownLink } = await client
+      .from('user_questions')
+      .select('id')
+      .eq('question_id', questionId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!isCreator && !ownLink) {
+      return res.status(403).json({ error: '无权删除该题目' });
+    }
+
+    // Always remove the caller's own link
+    const { error: ownDeleteErr } = await client
       .from('user_questions')
       .delete()
-      .eq('question_id', questionId);
-    if (uqError) throw new Error(`删除用户题目关联失败: ${uqError.message}`);
+      .eq('question_id', questionId)
+      .eq('user_id', userId);
+    if (ownDeleteErr) throw new Error(`删除用户题目关联失败: ${ownDeleteErr.message}`);
 
-    // Then delete from questions
-    const { error: qError } = await client
-      .from('questions')
-      .delete()
-      .eq('id', questionId);
-    if (qError) throw new Error(`删除题目失败: ${qError.message}`);
+    if (isCreator) {
+      // If other users still link this question, keep the row (deactivate only)
+      const { data: otherLinks } = await client
+        .from('user_questions')
+        .select('id')
+        .eq('question_id', questionId)
+        .neq('user_id', userId)
+        .limit(1);
+
+      if (otherLinks && otherLinks.length > 0) {
+        const { error: deactivateErr } = await client
+          .from('questions')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', questionId);
+        if (deactivateErr) throw new Error(`停用题目失败: ${deactivateErr.message}`);
+        return res.json({ success: true, message: '题目已从你的错题本移除，云端题目已停用（其他用户仍在使用）' });
+      }
+
+      // No other users reference it: remove remaining links then the row itself
+      const { error: uqError } = await client
+        .from('user_questions')
+        .delete()
+        .eq('question_id', questionId);
+      if (uqError) throw new Error(`删除用户题目关联失败: ${uqError.message}`);
+
+      const { error: qError } = await client
+        .from('questions')
+        .delete()
+        .eq('id', questionId);
+      if (qError) throw new Error(`删除题目失败: ${qError.message}`);
+    }
 
     res.json({ success: true, message: '题目已删除' });
   } catch (err: any) {
@@ -445,13 +495,13 @@ ${question.answer ? `参考答案：${question.answer}` : ''}
 // GET /api/v1/questions - Get user's questions
 router.get('/', async (req, res) => {
   try {
-    const { user_id, limit = '20', offset = '0' } = req.query;
+    const { limit = '20', offset = '0' } = req.query;
     const client = getSupabaseClient();
 
     const { data, error } = await client
       .from('user_questions')
       .select('*, questions(*)')
-      .eq('user_id', user_id)
+      .eq('user_id', req.authUserId)
       .order('created_at', { ascending: false })
       .range(Number(offset), Number(offset) + Number(limit) - 1);
     if (error) throw new Error(`查询失败: ${error.message}`);

@@ -8,7 +8,8 @@ const router = Router();
 // POST /api/v1/search - Search questions
 router.post('/', async (req, res) => {
   try {
-    const { scope, subject, knowledge_points, description, count = 5, user_id } = req.body;
+    const { scope, subject, knowledge_points, description, count = 5 } = req.body;
+    const user_id = req.authUserId;
     const client = getSupabaseClient();
     const customHeaders = HeaderUtils.extractForwardHeaders(req.headers as Record<string, string>);
 
@@ -255,15 +256,26 @@ router.post('/similar', async (req, res) => {
   }
 });
 
-// POST /api/v1/search/rate - Rate a question
+// POST /api/v1/search/rate - Rate a question (incremental average, consistent with questions /:id/rate)
 router.post('/rate', async (req, res) => {
   try {
-    const { question_id, user_id, rating } = req.body;
+    const { question_id, rating } = req.body;
     const client = getSupabaseClient();
+
+    const { data: question, error: getErr } = await client
+      .from('questions')
+      .select('rating, rating_count')
+      .eq('id', question_id)
+      .maybeSingle();
+    if (getErr) throw new Error(`查询失败: ${getErr.message}`);
+    if (!question) return res.status(404).json({ error: '题目不存在' });
+
+    const newCount = (question.rating_count || 0) + 1;
+    const newRating = Math.round(((question.rating || 3) * (newCount - 1) + rating) / newCount);
 
     const { data, error } = await client
       .from('questions')
-      .update({ rating: rating, updated_at: new Date().toISOString() })
+      .update({ rating: newRating, rating_count: newCount, updated_at: new Date().toISOString() })
       .eq('id', question_id)
       .select()
       .single();
@@ -277,7 +289,7 @@ router.post('/rate', async (req, res) => {
 // POST /api/v1/search/feedback - Report a question as incorrect
 router.post('/feedback', async (req, res) => {
   try {
-    const { question_id, user_id } = req.body;
+    const { question_id } = req.body;
     const client = getSupabaseClient();
 
     // Get the question

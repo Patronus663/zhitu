@@ -3,36 +3,36 @@ import { getSupabaseClient } from '../storage/database/supabase-client.js';
 
 const router = Router();
 
-// POST /api/v1/users - Create or get user
+// POST /api/v1/users - Create or get the authenticated user's business record
 router.post('/', async (req, res) => {
   try {
-    const { id, nickname, major, grade, learning_goal, mastery_expectation, personalized_info } = req.body;
+    const authUserId = req.authUserId;
+    const { nickname, major, grade, learning_goal, mastery_expectation, personalized_info } = req.body;
     const client = getSupabaseClient();
 
     // Check if user exists
-    if (id) {
-      const { data: existing, error: checkErr } = await client
-        .from('users')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-      if (checkErr) throw new Error(`查询失败: ${checkErr.message}`);
-      if (existing) {
-        return res.json({ user: existing });
-      }
+    const { data: existing, error: checkErr } = await client
+      .from('users')
+      .select('*')
+      .eq('id', authUserId)
+      .maybeSingle();
+    if (checkErr) throw new Error(`查询失败: ${checkErr.message}`);
+    if (existing) {
+      return res.json({ user: existing });
     }
 
-    // Create new user
+    // Create new user bound to the Supabase auth uid
     const { data, error } = await client
       .from('users')
       .insert({
+        id: authUserId,
         nickname: nickname || '同学',
         major,
         grade,
         learning_goal,
         mastery_expectation,
         personalized_info,
-        is_onboarded: true,
+        is_onboarded: Boolean(major || grade || learning_goal),
       })
       .select()
       .single();
@@ -53,14 +53,17 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/v1/users/:id - Get user by ID
+// GET /api/v1/users/:id - Get own user record
 router.get('/:id', async (req, res) => {
   try {
+    if (req.params.id !== req.authUserId) {
+      return res.status(403).json({ error: '无权访问其他用户的数据' });
+    }
     const client = getSupabaseClient();
     const { data, error } = await client
       .from('users')
       .select('*')
-      .eq('id', req.params.id)
+      .eq('id', req.authUserId)
       .maybeSingle();
     if (error) throw new Error(`查询失败: ${error.message}`);
     if (!data) return res.status(404).json({ error: '用户不存在' });
@@ -70,9 +73,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/v1/users/:id - Update user
+// PUT /api/v1/users/:id - Update own user record
 router.put('/:id', async (req, res) => {
   try {
+    if (req.params.id !== req.authUserId) {
+      return res.status(403).json({ error: '无权修改其他用户的数据' });
+    }
     const client = getSupabaseClient();
     const { nickname, major, grade, learning_goal, mastery_expectation, personalized_info, is_onboarded } = req.body;
     const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
@@ -87,7 +93,7 @@ router.put('/:id', async (req, res) => {
     const { data, error } = await client
       .from('users')
       .update(updateData)
-      .eq('id', req.params.id)
+      .eq('id', req.authUserId)
       .select()
       .single();
     if (error) throw new Error(`更新失败: ${error.message}`);

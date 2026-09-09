@@ -11,7 +11,7 @@ router.get('/:user_id', async (req, res) => {
     const { data, error } = await client
       .from('learning_profiles')
       .select('*')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .maybeSingle();
     if (error) throw new Error(`查询失败: ${error.message}`);
 
@@ -19,7 +19,7 @@ router.get('/:user_id', async (req, res) => {
     const { data: user } = await client
       .from('users')
       .select('nickname, major, grade, learning_goal')
-      .eq('id', req.params.user_id)
+      .eq('id', req.authUserId)
       .maybeSingle();
 
     res.json({ profile: data, user });
@@ -31,7 +31,7 @@ router.get('/:user_id', async (req, res) => {
 // POST /api/v1/learning/analyze - Analyze learning profile with AI
 router.post('/analyze', async (req, res) => {
   try {
-    const { user_id } = req.body;
+    const user_id = req.authUserId;
     const client = getSupabaseClient();
 
     // Get profile and user data
@@ -136,7 +136,7 @@ router.post('/:user_id/feedback', async (req, res) => {
     const { data: profile } = await client
       .from('learning_profiles')
       .select('*')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .maybeSingle();
 
     const prompt = `根据用户反馈，更新学情分析结果。
@@ -173,7 +173,7 @@ router.post('/:user_id/feedback', async (req, res) => {
     const { data, error } = await client
       .from('learning_profiles')
       .update({ ...updated, updated_at: new Date().toISOString() })
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .select()
       .single();
     if (error) throw new Error(`更新失败: ${error.message}`);
@@ -194,7 +194,7 @@ router.put('/:user_id', async (req, res) => {
       const { data: profile } = await client
         .from('learning_profiles')
         .select('*')
-        .eq('user_id', req.params.user_id)
+        .eq('user_id', req.authUserId)
         .maybeSingle();
 
       const prompt = `根据用户反馈，更新学情分析结果。
@@ -230,7 +230,7 @@ router.put('/:user_id', async (req, res) => {
       const { data, error } = await client
         .from('learning_profiles')
         .update({ ...updated, updated_at: new Date().toISOString() })
-        .eq('user_id', req.params.user_id)
+        .eq('user_id', req.authUserId)
         .select()
         .single();
       if (error) throw new Error(`更新失败: ${error.message}`);
@@ -247,7 +247,7 @@ router.put('/:user_id', async (req, res) => {
     const { data, error } = await client
       .from('learning_profiles')
       .update(updateData)
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .select()
       .single();
     if (error) throw new Error(`更新失败: ${error.message}`);

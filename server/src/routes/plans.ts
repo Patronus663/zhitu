@@ -1,8 +1,29 @@
 import { Router } from 'express';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../storage/database/supabase-client.js';
 import { invokeLLM } from '../services/llm.js';
 
 const router = Router();
+
+async function isOwnedPlan(client: SupabaseClient, planId: string, userId: string): Promise<boolean> {
+  const { data } = await client
+    .from('study_plans')
+    .select('id, user_id')
+    .eq('id', planId)
+    .maybeSingle();
+  return !!data && (data as any).user_id === userId;
+}
+
+async function isOwnedItem(client: SupabaseClient, itemId: string, userId: string): Promise<boolean> {
+  const { data } = await client
+    .from('plan_items')
+    .select('id, study_plans(user_id)')
+    .eq('id', itemId)
+    .maybeSingle();
+  if (!data) return false;
+  const ownerId = (data as any)?.study_plans?.user_id;
+  return ownerId === userId;
+}
 
 // GET /api/v1/plans/:user_id - Get user's study plans with item stats
 router.get('/:user_id', async (req, res) => {
@@ -11,7 +32,7 @@ router.get('/:user_id', async (req, res) => {
     const { data: plans, error } = await client
       .from('study_plans')
       .select('*')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .order('created_at', { ascending: false });
     if (error) throw new Error(`查询失败: ${error.message}`);
 
@@ -56,7 +77,7 @@ router.get('/:user_id/active', async (req, res) => {
     const { data: plans, error } = await client
       .from('study_plans')
       .select('*')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(1);
@@ -83,7 +104,8 @@ router.get('/:user_id/active', async (req, res) => {
 // POST /api/v1/plans/generate - Generate study plan with AI
 router.post('/generate', async (req, res) => {
   try {
-    const { user_id, learning_content } = req.body;
+    const { learning_content } = req.body;
+    const user_id = req.authUserId;
     const client = getSupabaseClient();
 
     // Get user info and learning profile
@@ -155,7 +177,8 @@ router.post('/generate', async (req, res) => {
 // POST /api/v1/plans - Create study plan
 router.post('/', async (req, res) => {
   try {
-    const { user_id, title, description, start_date, end_date, items, plan_type } = req.body;
+    const { title, description, start_date, end_date, items, plan_type } = req.body;
+    const user_id = req.authUserId;
     const client = getSupabaseClient();
 
     // Only deactivate other daily plans
@@ -220,6 +243,10 @@ router.delete('/:plan_id', async (req, res) => {
     const client = getSupabaseClient();
     const { plan_id } = req.params;
 
+    if (!(await isOwnedPlan(client, plan_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权操作该计划' });
+    }
+
     // Delete plan items first
     await client.from('plan_items').delete().eq('plan_id', plan_id);
 
@@ -241,6 +268,10 @@ router.post('/:plan_id/items', async (req, res) => {
       return res.status(400).json({ error: '任务标题不能为空' });
     }
     const client = getSupabaseClient();
+
+    if (!(await isOwnedPlan(client, req.params.plan_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权操作该计划' });
+    }
 
     // Get max sort_order for this plan
     const { data: existingItems } = await client
@@ -276,6 +307,10 @@ router.put('/items/:item_id/complete', async (req, res) => {
     const { is_completed } = req.body;
     const client = getSupabaseClient();
 
+    if (!(await isOwnedItem(client, req.params.item_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权操作该任务' });
+    }
+
     const updateData: Record<string, any> = { is_completed };
     if (is_completed) {
       updateData.completed_at = new Date().toISOString();
@@ -300,6 +335,9 @@ router.put('/items/:item_id/complete', async (req, res) => {
 router.get('/detail/:plan_id', async (req, res) => {
   try {
     const client = getSupabaseClient();
+    if (!(await isOwnedPlan(client, req.params.plan_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权访问该计划' });
+    }
     const { data: plan, error: planError } = await client
       .from('study_plans')
       .select('*')
@@ -334,6 +372,10 @@ router.get('/items/:item_id', async (req, res) => {
       .eq('id', req.params.item_id)
       .single();
     if (error) throw new Error(`查询失败: ${error.message}`);
+    const ownerId = (data as any)?.study_plans?.user_id;
+    if (ownerId !== req.authUserId) {
+      return res.status(403).json({ error: '无权访问该任务' });
+    }
     res.json({ item: data });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -345,6 +387,10 @@ router.put('/items/:item_id', async (req, res) => {
   try {
     const { title, description, due_date, sort_order, is_completed } = req.body;
     const client = getSupabaseClient();
+
+    if (!(await isOwnedItem(client, req.params.item_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权操作该任务' });
+    }
 
     const updateData: Record<string, any> = {};
     if (title !== undefined) updateData.title = title;
@@ -370,6 +416,9 @@ router.put('/items/:item_id', async (req, res) => {
 router.delete('/items/:item_id', async (req, res) => {
   try {
     const client = getSupabaseClient();
+    if (!(await isOwnedItem(client, req.params.item_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权操作该任务' });
+    }
     const { error } = await client
       .from('plan_items')
       .delete()
@@ -386,6 +435,10 @@ router.post('/items/:item_id/move', async (req, res) => {
   try {
     const { new_due_date } = req.body;
     const client = getSupabaseClient();
+
+    if (!(await isOwnedItem(client, req.params.item_id, req.authUserId))) {
+      return res.status(403).json({ error: '无权操作该任务' });
+    }
 
     const { data, error } = await client
       .from('plan_items')
@@ -410,7 +463,7 @@ router.get('/overdue/:user_id', async (req, res) => {
     const { data: plan } = await client
       .from('study_plans')
       .select('id')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .eq('is_active', true)
       .eq('plan_type', 'daily')
       .single();
@@ -445,7 +498,7 @@ router.post('/move-overdue/:user_id', async (req, res) => {
     const { data: plan } = await client
       .from('study_plans')
       .select('id')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .eq('is_active', true)
       .eq('plan_type', 'daily')
       .single();
@@ -481,7 +534,7 @@ router.get('/:user_id/today', async (req, res) => {
     const { data: plans } = await client
       .from('study_plans')
       .select('id')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .eq('is_active', true)
       .eq('plan_type', 'daily')
       .limit(1);

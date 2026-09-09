@@ -12,7 +12,7 @@ router.get('/:user_id/messages', async (req, res) => {
     const { data, error } = await client
       .from('chat_messages')
       .select('*')
-      .eq('user_id', req.params.user_id)
+      .eq('user_id', req.authUserId)
       .order('created_at', { ascending: true })
       .limit(50);
     if (error) throw new Error(`查询失败: ${error.message}`);
@@ -25,7 +25,7 @@ router.get('/:user_id/messages', async (req, res) => {
 // POST /api/v1/chat/:user_id/messages - Send a message and get a reply (non-streaming)
 router.post('/:user_id/messages', async (req, res) => {
   try {
-    const { user_id } = req.params;
+    const user_id = req.authUserId;
     const { content } = req.body;
     const client = getSupabaseClient();
 
@@ -112,7 +112,7 @@ router.post('/:user_id/messages', async (req, res) => {
 // POST /api/v1/chat/:user_id/stream - Stream chat response (SSE)
 router.post('/:user_id/stream', async (req, res) => {
   try {
-    const { user_id } = req.params;
+    const user_id = req.authUserId;
     const { message } = req.body;
     const customHeaders = HeaderUtils.extractForwardHeaders(req.headers as Record<string, string>);
     const client = getSupabaseClient();
@@ -228,7 +228,7 @@ router.delete('/:user_id/history', async (req, res) => {
     const { error } = await client
       .from('chat_messages')
       .delete()
-      .eq('user_id', req.params.user_id);
+      .eq('user_id', req.authUserId);
     if (error) throw new Error(`删除失败: ${error.message}`);
     res.json({ success: true });
   } catch (err: any) {
