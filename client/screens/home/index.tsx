@@ -240,7 +240,7 @@ export default function HomeScreen() {
   return (
     <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F2E7FB">
       <Image
-        source={require('@/assets/D25D9DCB09C68577C04A67E0924307FF_20260910233327418.png')}
+        source={require('@/assets/0759F06704C3E93D407340E744D793DE.png')}
         style={styles.bgImage}
         resizeMode="contain"
       />
