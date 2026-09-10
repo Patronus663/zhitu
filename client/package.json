@@ -9,7 +9,9 @@
     "install-missing": "node ./scripts/install-missing-deps.js",
     "lint": "tsc --noEmit && eslint ./ -f ./scripts/formatter.mjs --quiet",
     "start": "expo start --web --clear",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "jest": {
     "preset": "jest-expo"
@@ -99,5 +101,6 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1",
     "uniwind": "^1.2.7"
-  }
+  },
+  "version": "1.0.0"
 }

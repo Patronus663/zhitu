@@ -135,8 +135,18 @@
 
 ## 四、后续阶段（APK 集成，待补全完成后启动）
 
-1. **Coze 生产部署验证**：部署后端 → 记录生产公网 URL → 验证 `health` / `supabase-config` / SSE 是否被网关缓冲
-2. **构建环境**：安装 Android SDK（Android Studio 或 commandline-tools，compileSdk 36）→ 配置 `JAVA_HOME` / `ANDROID_HOME` → keytool 生成 keystore（不入 git）
-3. **客户端配置**：固定 `android.package`（现为 `com.anonymous.x...` 占位）与 app 名「知途」→ `EXPO_PUBLIC_BACKEND_BASE_URL` 指向生产 URL → `expo prebuild --platform android`
-4. **构建**：`gradlew assembleRelease` 出 APK → 真机全流程回归（相机权限、上传、SSE）
-5. **交付**：签名 release APK + 安装说明
+> **进度（2026-09-10）**：步骤 2/3 完成，debug APK 已产出（`client/android/app/build/outputs/apk/debug/app-debug.apk`）。release 出包等待生产后端 URL。
+
+1. **Coze 生产部署验证**（待做）：部署后端 → 记录生产公网 URL → 验证 `health` / `supabase-config` / SSE 是否被网关缓冲
+2. ~~**构建环境**：安装 Android SDK~~ ✅ 完成（commandline-tools 装于 `D:\Android\Sdk`，platforms;android-36 + build-tools;36.0.0，`JAVA_HOME`/`ANDROID_HOME` 已持久化到用户环境变量）
+3. ~~**客户端配置**~~ ✅ 完成（`android.package=com.zhitu.app`、app 名「知途」、`expo prebuild --platform android` 已执行）→ **待办**：`EXPO_PUBLIC_BACKEND_BASE_URL` 指向生产 URL（构建时固化）
+4. **构建**：~~debug 链路验证~~ ✅ `gradlew clean assembleDebug` 成功（639 tasks）→ **待做**：`gradlew assembleRelease` 出正式 APK → 真机全流程回归（相机权限、上传、SSE）
+5. **交付**：签名 release APK（debug 包默认用 debug keystore，release 分发前需 keytool 生成独立 keystore，不入 git）+ 安装说明
+
+### Windows 本地构建关键配置（踩坑记录，勿回退）
+
+- **项目路径必须纯 ASCII**：已从 `D:\Users\桌面\zhitu` 迁移到 `D:\zhitu`（原路径留有 junction 兼容，但构建命令必须走 `D:\zhitu\projects`）。中文路径导致原生 C++ 构建 `CreateProcess error=2`
+- **`.npmrc` 加 `node-linker=hoisted`**：pnpm 隔离布局的 `.pnpm\包@版本_依赖哈希\` 长目录名 + RN 深目录超过 Windows MAX_PATH(260)，导致 prefab 脚本无法执行
+- **`client/android/gradle.properties`**：`-Dfile.encoding=UTF-8`（中文 Windows 默认 GBK，否则 gradle 解码 node 输出的 UTF-8 路径变乱码）；`android.overridePathCheck=true`（迁移后已非必需）
+- **gradle 发行版用腾讯镜像**：`gradle-wrapper.properties` 指向 `mirrors.cloud.tencent.com`（官方源国内超时）
+- **长构建用后台日志模式**：`Start-Process` 分离运行 + 轮询 log，避免终端超时杀进程
