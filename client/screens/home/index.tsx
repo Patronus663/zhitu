@@ -240,7 +240,7 @@ export default function HomeScreen() {
   return (
     <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F2E7FB">
       <Image
-        source={require('@/assets/IMG_20260910_231248.jpg')}
+        source={require('@/assets/D25D9DCB09C68577C04A67E0924307FF.png')}
         style={styles.bgImage}
         resizeMode="cover"
       />
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
   progressSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
   bgImage: { ...StyleSheet.absoluteFillObject, opacity: 0.5 },
-  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,253,248,0.35)' },
+  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(250,251,249,0.40)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
