@@ -7,6 +7,7 @@ import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { planApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen() {
   const { user } = useUser();
@@ -237,13 +238,16 @@ export default function HomeScreen() {
   const dayStr = `星期${weekDays[today.getDay()]}`;
 
   return (
-    <Screen safeAreaEdges={['left', 'right']} backgroundColor="#FAFAF8">
+    <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F2E7FB">
+      <LinearGradient colors={['#EFDEFA', '#F6EEFC', '#FBFAF7']} locations={[0, 0.45, 1]} style={styles.bgGradient} />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <LinearGradient colors={['#A13BC7', '#8A2FB5', '#7B2D8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.header, { paddingTop: insets.top + 16 }]}>
+          <View style={styles.glowGlow1} />
+          <View style={styles.glowGlow2} />
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
@@ -265,7 +269,7 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.progressSub}>{todayCompleted}/{todayTotal} 项已完成</Text>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Today's Tasks */}
         <View style={styles.section}>
@@ -594,6 +598,9 @@ const styles = StyleSheet.create({
   progressBar: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginBottom: 8 },
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
   progressSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
+  bgGradient: { ...StyleSheet.absoluteFillObject },
+  glowGlow1: { position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.16)' },
+  glowGlow2: { position: 'absolute', top: 60, left: -40, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(233,190,255,0.18)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
