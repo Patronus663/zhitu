@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Image } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
 import { useFocusEffect } from 'expo-router';
@@ -63,7 +63,14 @@ export default function ChatScreen() {
   );
 
   return (
-    <Screen backgroundColor="#FAFAF8">
+    <Screen backgroundColor="#F4F6F0">
+      {/* 全屏淡化背景图 */}
+      <Image
+        source={require('@/assets/1789053755992.jpeg')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      />
+      <View style={styles.bgOverlay} />
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {/* Header */}
         <View style={styles.header}>
@@ -120,7 +127,9 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  bgImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
+  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(247,249,243,0.4)' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: 'rgba(255,255,255,0.78)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.6)' },
   headerIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#7B2D8E', justifyContent: 'center', alignItems: 'center' },
   headerIconText: { color: '#FFF', fontSize: 14, fontWeight: '700' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
@@ -136,8 +145,8 @@ const styles = StyleSheet.create({
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 100 },
   emptyText: { fontSize: 16, color: '#9CA3AF', marginTop: 8 },
   emptySub: { fontSize: 13, color: '#D1D5DB' },
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F3F4F6' },
-  textInput: { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#1A1A2E', maxHeight: 100 },
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.82)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.6)' },
+  textInput: { flex: 1, backgroundColor: 'rgba(243,244,246,0.8)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#1A1A2E', maxHeight: 100 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#7B2D8E', justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { backgroundColor: '#D1D5DB' },
 });
