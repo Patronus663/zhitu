@@ -227,14 +227,17 @@ export { default } from "@/screens/home";
 
 ### 目录结构
 
+当前项目使用 4 个 Tab：
+
 ```text
 client/app/
 ├── _layout.tsx              # 根布局
 ├── (tabs)/
 │   ├── _layout.tsx          # Tab 导航配置
-│   ├── index.tsx            # 默认 Tab（必须存在）
-│   ├── discover.tsx         # 发现页
-│   └── profile.tsx          # 个人中心
+│   ├── index.tsx            # 首页
+│   ├── search.tsx           # 检索
+│   ├── profile.tsx          # 学情
+│   └── chat.tsx             # 知途
 ├── detail.tsx               # Tab 外的独立页面
 └── +not-found.tsx           # 404 页面
 ```
@@ -279,6 +282,17 @@ client/app/_layout.tsx
 ---
 
 ### Tab 页面
+
+当前项目包含以下 Tab 页面：
+
+| 路由文件          | Tab 名称 |
+| ------------- | ------ |
+| `index.tsx`   | 首页     |
+| `search.tsx`  | 检索     |
+| `profile.tsx` | 学情     |
+| `chat.tsx`    | 知途     |
+
+例如首页：
 
 文件：
 
@@ -325,13 +339,16 @@ export default function TabLayout() {
     backgroundColor: background,
     borderTopWidth: 1,
     borderTopColor: border,
+    paddingBottom: 8,
+    paddingTop: 6,
+    height: 70 + insets.bottom,
   };
 
   // 用于修复 Web 上高度异常的问题
   if (Platform.OS === "web") {
     tabBarStyle = {
       ...tabBarStyle,
-      height: "auto",
+      height: undefined as any,
     };
   }
 
@@ -340,8 +357,14 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle,
-        tabBarActiveTintColor: accent,
+        tabBarActiveTintColor: "#7B2D8E",
         tabBarInactiveTintColor: muted,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "500",
+          marginTop: 2,
+        },
+        tabBarHideOnKeyboard: true,
       }}
     >
       {/* name 必须与文件名完全一致 */}
@@ -356,11 +379,15 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="discover"
+        name="search"
         options={{
-          title: "发现",
+          title: "检索",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="compass" size={20} color={color} />
+            <FontAwesome6
+              name="magnifying-glass"
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
@@ -368,9 +395,27 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "我的",
+          title: "学情",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="user" size={20} color={color} />
+            <FontAwesome6
+              name="chart-line"
+              size={20}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "知途",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome6
+              name="comments"
+              size={20}
+              color={color}
+            />
           ),
         }}
       />
@@ -392,14 +437,54 @@ name
 例如：
 
 ```text
-discover.tsx
+search.tsx
 ```
 
 必须对应：
 
 ```tsx
-<Tabs.Screen name="discover" />
+<Tabs.Screen name="search" />
 ```
+
+同理：
+
+```text
+profile.tsx
+```
+
+必须对应：
+
+```tsx
+<Tabs.Screen name="profile" />
+```
+
+以及：
+
+```text
+chat.tsx
+```
+
+必须对应：
+
+```tsx
+<Tabs.Screen name="chat" />
+```
+
+`useSafeAreaInsets()` 用于获取设备底部安全区域的边距。
+
+当前 Tab Bar 使用：
+
+```tsx
+insets.bottom
+```
+
+计算 Tab Bar 高度，因此：
+
+```tsx
+const insets = useSafeAreaInsets();
+```
+
+**不要删除。**
 
 ---
 
@@ -469,7 +554,7 @@ pnpm add axios cors
 
 ## 路径别名
 
-Expo 已配置：
+项目已配置路径别名：
 
 ```text
 @/
@@ -481,7 +566,7 @@ Expo 已配置：
 client/
 ```
 
-因此应优先使用 `@/` 进行模块导入。
+因此可以使用 `@/` 进行模块导入。
 
 ### 推荐
 
@@ -602,3 +687,6 @@ coze-dev dev
 | Hooks       | `client/hooks/`                            |
 | Context     | `client/contexts/`                         |
 | 工具函数        | `client/utils/`                            |
+
+```
+```
