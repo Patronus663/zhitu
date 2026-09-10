@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
+import { View, Image, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
@@ -239,7 +239,12 @@ export default function HomeScreen() {
 
   return (
     <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F2E7FB">
-      <LinearGradient colors={['#EFDEFA', '#F6EEFC', '#FBFAF7']} locations={[0, 0.45, 1]} style={styles.bgGradient} />
+      <Image
+        source={require('@/assets/IMG_20260910_231248.jpg')}
+        style={styles.bgImage}
+        resizeMode="cover"
+      />
+      <View style={styles.bgOverlay} />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -596,7 +601,8 @@ const styles = StyleSheet.create({
   progressBar: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginBottom: 8 },
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
   progressSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
-  bgGradient: { ...StyleSheet.absoluteFillObject },
+  bgImage: { ...StyleSheet.absoluteFillObject, opacity: 0.2 },
+  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,253,248,0.72)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
