@@ -246,8 +246,6 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <LinearGradient colors={['#A13BC7', '#8A2FB5', '#7B2D8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <View style={styles.glowGlow1} />
-          <View style={styles.glowGlow2} />
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
@@ -599,8 +597,6 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
   progressSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
   bgGradient: { ...StyleSheet.absoluteFillObject },
-  glowGlow1: { position: 'absolute', top: -30, right: -20, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.16)' },
-  glowGlow2: { position: 'absolute', top: 60, left: -40, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(233,190,255,0.18)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
