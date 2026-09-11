@@ -250,6 +250,7 @@ export default function HomeScreen() {
             <View>
               <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
               <Text style={styles.userName}>你好，{user?.nickname || '同学'}</Text>
+              <Text style={styles.versionTag}>v2</Text>
             </View>
             <TouchableOpacity style={styles.avatarBtn} onPress={() => router.push('/profile')}>
               <Text style={styles.avatarText}>{(user?.nickname || '同')[0]}</Text>
@@ -590,6 +591,7 @@ const styles = StyleSheet.create({
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
   userName: { fontSize: 22, fontWeight: '700', color: '#FFFFFF' },
+  versionTag: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginTop: 2 },
   avatarBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
   progressCard: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16 },
