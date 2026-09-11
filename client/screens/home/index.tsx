@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
   userNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   userName: { fontSize: 22, fontWeight: '700', color: '#FFFFFF' },
-  rabbitImg: { width: 44, height: 48 },
+  rabbitImg: { width: 46, height: 48 },
   
   avatarBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
