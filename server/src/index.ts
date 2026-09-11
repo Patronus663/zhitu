@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getSupabaseCredentials } from './storage/database/supabase-client.js';
 import { notFoundHandler, errorHandler } from './utils/errors.js';
 import userRoutes from './routes/users.js';
@@ -10,6 +13,7 @@ import learningRoutes from './routes/learning.js';
 import planRoutes from './routes/plans.js';
 import chatRoutes from './routes/chat.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = process.env.PORT || 9091;
 
@@ -40,6 +44,17 @@ app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/learning', learningRoutes);
 app.use('/api/v1/plans', planRoutes);
 app.use('/api/v1/chat', chatRoutes);
+
+// 生产模式：若存在前端静态产物（Expo web export 输出），由后端一体化托管
+// 便于"整个项目"作为单个可执行进程运行（dev 模式不受影响）
+const clientDist = path.resolve(__dirname, '../../client/dist');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  // SPA 兜底：非 API 请求回退到 index.html，保证前端路由可刷新
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 // 404 兜底（需在路由之后注册）
 app.use(notFoundHandler);
