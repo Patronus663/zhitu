@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import { getSupabaseCredentials } from './storage/database/supabase-client.js';
+import { notFoundHandler, errorHandler } from './utils/errors.js';
 import userRoutes from './routes/users.js';
 import questionRoutes from './routes/questions.js';
 import searchRoutes from './routes/search.js';
@@ -40,13 +41,11 @@ app.use('/api/v1/learning', learningRoutes);
 app.use('/api/v1/plans', planRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
-// Multer error handling
-app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: '文件大小超过限制（最大 10MB）' });
-  }
-  next(err);
-});
+// 404 兜底（需在路由之后注册）
+app.use(notFoundHandler);
+
+// 统一错误处理（Multer 文件大小错误 + 通用错误）
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}/`);

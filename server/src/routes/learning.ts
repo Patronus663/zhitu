@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getSupabaseClient } from '../storage/database/supabase-client.js';
 import { invokeLLM } from '../services/llm.js';
+import { AppError } from '../utils/errors.js';
 
 const router = Router();
 
@@ -130,8 +131,11 @@ ${plans?.map((p: any) => `- ${p.title}`).join('\n') || '暂无'}
 // POST /api/v1/learning/:user_id/feedback - Update learning profile with user feedback
 router.post('/:user_id/feedback', async (req, res) => {
   try {
-    const client = getSupabaseClient();
     const { feedback } = req.body;
+    if (typeof feedback !== 'string' || !feedback.trim()) {
+      return res.status(400).json({ error: 'feedback 不能为空' });
+    }
+    const client = getSupabaseClient();
 
     const { data: profile } = await client
       .from('learning_profiles')

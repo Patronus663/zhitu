@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { getSupabaseClient } from '../storage/database/supabase-client.js';
 import { invokeLLM } from '../services/llm.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { assertValid, str, optStr } from '../utils/validation.js';
 
 const router = Router();
 
@@ -153,9 +155,9 @@ router.post('/generate', async (req, res) => {
 });
 
 // POST /api/v1/plans - Create study plan
-router.post('/', async (req, res) => {
-  try {
+router.post('/', asyncHandler(async (req, res) => {
     const { user_id, title, description, start_date, end_date, items, plan_type } = req.body;
+    assertValid({ user_id: str(), title: str() }, { user_id, title });
     const client = getSupabaseClient();
 
     // Only deactivate other daily plans
@@ -209,10 +211,7 @@ router.post('/', async (req, res) => {
       .order('sort_order', { ascending: true });
 
     res.json({ plan, items: planItems || [] });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  }));
 
 // DELETE /api/v1/plans/:plan_id - Delete a study plan
 router.delete('/:plan_id', async (req, res) => {
@@ -234,12 +233,9 @@ router.delete('/:plan_id', async (req, res) => {
 });
 
 // POST /api/v1/plans/:plan_id/items - Add a new item to a plan
-router.post('/:plan_id/items', async (req, res) => {
-  try {
+router.post('/:plan_id/items', asyncHandler(async (req, res) => {
     const { title, description, due_date, sort_order } = req.body;
-    if (!title) {
-      return res.status(400).json({ error: '任务标题不能为空' });
-    }
+    assertValid({ title: str(), plan_id: str() }, { title, plan_id: req.params.plan_id });
     const client = getSupabaseClient();
 
     // Get max sort_order for this plan
@@ -265,10 +261,7 @@ router.post('/:plan_id/items', async (req, res) => {
       .single();
     if (error) throw new Error(`创建失败: ${error.message}`);
     res.json({ item: data });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+  }));
 
 // PUT /api/v1/plans/items/:item_id/complete - Mark item as complete
 router.put('/items/:item_id/complete', async (req, res) => {

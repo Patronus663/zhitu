@@ -63,7 +63,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen backgroundColor="#BFDFF7">
-      <ImageBackground source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" pointerEvents="none" />
+      <ImageBackground source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
       <View style={[StyleSheet.absoluteFillObject, styles.bgOverlay]} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>学情分析</Text>

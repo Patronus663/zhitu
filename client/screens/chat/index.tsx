@@ -15,6 +15,13 @@ interface Message {
 
 const IMAGE_AVATAR = require('@/assets/1788942211508_edit_1282431744545459.png');
 
+const SUGGESTIONS = [
+  '今天的学习计划怎么安排？',
+  '你能帮我把错题整理成知识点吗？',
+  '这道题应该怎么做？',
+  '给我的学情提点建议',
+];
+
 export default function ChatScreen() {
   const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,9 +43,9 @@ export default function ChatScreen() {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || loading || !user) return;
-    const userMsg = input.trim();
+  const sendText = async (raw: string) => {
+    if (!raw.trim() || loading || !user) return;
+    const userMsg = raw.trim();
     setInput('');
     setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'user', content: userMsg }]);
     setLoading(true);
@@ -51,6 +58,10 @@ export default function ChatScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSend = () => {
+    sendText(input);
   };
 
   const renderMessage = ({ item }: { item: Message }) => (
@@ -102,6 +113,18 @@ export default function ChatScreen() {
               <FontAwesome6 name="comments" size={40} color="#9CA3AF" />
               <Text style={styles.emptyText}>开始和知途对话吧！</Text>
               <Text style={styles.emptySub}>你可以问学习相关的问题</Text>
+              <View style={styles.suggestWrap}>
+                {SUGGESTIONS.map((q) => (
+                  <TouchableOpacity
+                    key={q}
+                    style={styles.suggestChip}
+                    onPress={() => { setInput(q); sendText(q); }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.suggestText}>{q}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           }
         />
@@ -155,4 +178,7 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, backgroundColor: 'rgba(243,244,246,0.8)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#1A1A2E', maxHeight: 100 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#7B2D8E', justifyContent: 'center', alignItems: 'center' },
   sendBtnDisabled: { backgroundColor: '#D1D5DB' },
+  suggestWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 18, paddingHorizontal: 24 },
+  suggestChip: { backgroundColor: 'rgba(255,255,255,0.82)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(123,45,142,0.25)' },
+  suggestText: { fontSize: 13, color: '#7B2D8E' },
 });

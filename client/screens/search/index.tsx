@@ -64,7 +64,7 @@ export default function SearchScreen() {
 
   return (
     <Screen backgroundColor="#BFDFF7">
-      <RNImage source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" pointerEvents="none" />
+      <RNImage source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
       <View style={[StyleSheet.absoluteFillObject, styles.bgOverlay]} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>题目检索</Text>
