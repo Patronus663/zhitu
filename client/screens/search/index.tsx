@@ -4,6 +4,7 @@ import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
 import { searchApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 
 export default function SearchScreen() {
@@ -63,7 +64,8 @@ export default function SearchScreen() {
   };
 
   return (
-    <Screen backgroundColor="#FAFAF8">
+    <Screen backgroundColor="#BFDFF7">
+      <LinearGradient colors={['#BFDFF7', '#E3D2F6', '#F2E9FB']} style={StyleSheet.absoluteFillObject} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>题目检索</Text>
         <Text style={styles.subtitle}>输入学科、知识点等描述，AI帮你找到相关题目</Text>

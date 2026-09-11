@@ -4,6 +4,7 @@ import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { learningApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -61,7 +62,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen backgroundColor="#F2E7FB">
+    <Screen backgroundColor="#BFDFF7">
+      <LinearGradient colors={['#BFDFF7', '#E3D2F6', '#F2E9FB']} style={StyleSheet.absoluteFillObject} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>学情分析</Text>
         <Text style={styles.subtitle}>了解你的学习状况，获取个性化建议</Text>
