@@ -61,7 +61,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen backgroundColor="#FAFAF8">
+    <Screen backgroundColor="#F2E7FB">
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>学情分析</Text>
         <Text style={styles.subtitle}>了解你的学习状况，获取个性化建议</Text>
