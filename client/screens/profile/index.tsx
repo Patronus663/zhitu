@@ -88,7 +88,7 @@ export default function ProfileScreen() {
                 <Text style={styles.accountHint}>登录后可同步云端收藏与进度</Text>
               </View>
               <TouchableOpacity style={styles.loginBtn} onPress={() => router.push('/login')}>
-                <FontAwesome6 name="right-to-bracket" size={14} color="#FFF" />
+                <FontAwesome6 name="right-to-bracket" size={14} color="#33506E" />
                 <Text style={styles.loginBtnText}>登录 / 注册</Text>
               </TouchableOpacity>
             </>
@@ -178,13 +178,13 @@ const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 16 },
   accountCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)' },
   accountInfo: { flex: 1, marginRight: 12 },
-  accountLabel: { color: '#2E4A6B', fontSize: 13, marginBottom: 2 },
-  accountEmail: { color: '#1F3A5F', fontSize: 15, fontWeight: '600' },
-  accountHint: { color: '#2E4A6B', fontSize: 14, fontWeight: '600' },
-  loginBtn: { backgroundColor: '#3D6B9E', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
-  loginBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
-  logoutBtn: { backgroundColor: '#3D6B9E', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
-  logoutBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  accountLabel: { color: '#8CA6C4', fontSize: 13, marginBottom: 2 },
+  accountEmail: { color: '#5B7BA5', fontSize: 15, fontWeight: '600' },
+  accountHint: { color: '#8CA6C4', fontSize: 14, fontWeight: '600' },
+  loginBtn: { backgroundColor: '#A8C0DC', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
+  loginBtnText: { color: '#33506E', fontSize: 14, fontWeight: '600' },
+  logoutBtn: { backgroundColor: '#A8C0DC', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
+  logoutBtnText: { color: '#33506E', fontSize: 14, fontWeight: '600' },
   title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
   card: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)' },
