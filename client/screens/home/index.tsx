@@ -238,13 +238,14 @@ export default function HomeScreen() {
   const dayStr = `星期${weekDays[today.getDay()]}`;
 
   return (
-    <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F1E9FB">
+    <Screen safeAreaEdges={['left', 'right']}>
+      <ImageBackground source={require('@/assets/bg.jpg')} style={styles.bgContainer} resizeMode="cover">
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header */}
-        <LinearGradient colors={['#9A3BC5', '#8A2FB5', '#7B2D8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <LinearGradient colors={['rgba(154,59,197,0.62)', 'rgba(138,47,181,0.5)', 'rgba(123,45,142,0.52)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
@@ -434,6 +435,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+      </ImageBackground>
 
       {/* Task Menu Modal */}
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
@@ -583,6 +585,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   bgContainer: { flex: 1 },
+  bgContainer: { flex: 1 },
   header: { backgroundColor: '#7B2D8E', paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
@@ -602,9 +605,9 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
   sectionBadge: { backgroundColor: '#7B2D8E', color: '#FFF', fontSize: 11, fontWeight: '600', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  emptyCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8 },
+  emptyCard: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8 },
   emptyText: { color: '#9CA3AF', fontSize: 14 },
-  taskCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, marginBottom: 8, gap: 12 },
+  taskCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 14, padding: 14, marginBottom: 8, gap: 12 },
   checkbox: { padding: 4 },
   checkboxInner: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' },
   checkboxDone: { backgroundColor: '#7B2D8E', borderColor: '#7B2D8E' },
@@ -615,7 +618,7 @@ const styles = StyleSheet.create({
   taskDate: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
   menuBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  quickCard: { flex: 1, minWidth: '45%', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, alignItems: 'center', gap: 8 },
+  quickCard: { flex: 1, minWidth: '45%', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 16, alignItems: 'center', gap: 8 },
   quickIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
   quickLabel: { fontSize: 13, fontWeight: '500', color: '#374151' },
   menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' },
