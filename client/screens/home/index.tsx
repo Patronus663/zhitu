@@ -239,7 +239,7 @@ export default function HomeScreen() {
 
   return (
     <Screen safeAreaEdges={['left', 'right']}>
-      <ImageBackground source={require('@/assets/bg.jpg')} style={styles.bgContainer} resizeMode="cover">
+      <LinearGradient style={styles.bgContainer} colors={['#BFDFF7', '#E3D2F6', '#F2E9FB']}>
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -436,7 +436,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-      </ImageBackground>
+      </LinearGradient>
 
       {/* Task Menu Modal */}
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
@@ -586,8 +586,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   bgContainer: { flex: 1 },
-  bgContainer: { flex: 1 },
-  header: { backgroundColor: '#7B2D8E', paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
   userName: { fontSize: 22, fontWeight: '700', color: '#FFFFFF' },
