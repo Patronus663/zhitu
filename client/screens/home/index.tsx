@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Image, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
+import { View, Image, ImageBackground, Text, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Modal, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/contexts/UserContext';
@@ -239,11 +239,11 @@ export default function HomeScreen() {
 
   return (
     <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F2E7FB">
-      <Image
+      <ImageBackground
         source={require('@/assets/2.jpg')}
-        style={styles.bgImage}
+        style={styles.bgContainer}
         resizeMode="cover"
-      />
+      >
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -582,11 +582,13 @@ export default function HomeScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+    </ImageBackground>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  bgContainer: { flex: 1 },
   header: { backgroundColor: '#7B2D8E', paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
