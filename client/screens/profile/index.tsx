@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, ImageBackground } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { useFocusEffect } from 'expo-router';
 import { learningApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -63,7 +63,8 @@ export default function ProfileScreen() {
 
   return (
     <Screen backgroundColor="#BFDFF7">
-      <LinearGradient colors={['#BFDFF7', '#E3D2F6', '#F2E9FB']} style={StyleSheet.absoluteFillObject} pointerEvents="none" />
+      <ImageBackground source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" pointerEvents="none" />
+      <View style={[StyleSheet.absoluteFillObject, styles.bgOverlay]} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>学情分析</Text>
         <Text style={styles.subtitle}>了解你的学习状况，获取个性化建议</Text>
@@ -173,8 +174,9 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  bgOverlay: { backgroundColor: 'rgba(216,196,245,0.55)' },
   container: { padding: 20, paddingTop: 16 },
-  accountCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#A9D7F0', borderRadius: 16, padding: 16, marginBottom: 20 },
+  accountCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)' },
   accountInfo: { flex: 1, marginRight: 12 },
   accountLabel: { color: '#2E4A6B', fontSize: 13, marginBottom: 2 },
   accountEmail: { color: '#1F3A5F', fontSize: 15, fontWeight: '600' },
@@ -185,7 +187,7 @@ const styles = StyleSheet.create({
   logoutBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
-  card: { backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16 },
+  card: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)' },
   cardTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E', marginBottom: 12 },
   infoRow: { marginBottom: 12 },
   infoLabel: { fontSize: 12, color: '#9CA3AF', marginBottom: 2 },
@@ -194,11 +196,11 @@ const styles = StyleSheet.create({
   analyzeBtn: { backgroundColor: '#7B2D8E', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 16 },
   analyzeBtnContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   analyzeBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
-  suggestCard: { backgroundColor: '#FEF3C7', borderRadius: 16, padding: 16, marginBottom: 16 },
+  suggestCard: { backgroundColor: 'rgba(255,248,225,0.85)', borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)' },
   suggestTitle: { fontSize: 15, fontWeight: '700', color: '#92400E', marginBottom: 8 },
   suggestText: { fontSize: 14, color: '#78350F', lineHeight: 22 },
   feedbackHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  feedbackInput: { backgroundColor: '#F9FAFB', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1A1A2E', borderWidth: 1, borderColor: '#E5E7EB', minHeight: 80, marginTop: 12 },
+  feedbackInput: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1A1A2E', borderWidth: 1, borderColor: 'rgba(255,255,255,0.9)', minHeight: 80, marginTop: 12 },
   feedbackBtn: { backgroundColor: '#C9A96E', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   feedbackBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
 });

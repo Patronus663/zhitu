@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, FlatList, Image as RNImage } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
 import { searchApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 
 export default function SearchScreen() {
@@ -65,7 +64,8 @@ export default function SearchScreen() {
 
   return (
     <Screen backgroundColor="#BFDFF7">
-      <LinearGradient colors={['#BFDFF7', '#E3D2F6', '#F2E9FB']} style={StyleSheet.absoluteFillObject} pointerEvents="none" />
+      <RNImage source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" pointerEvents="none" />
+      <View style={[StyleSheet.absoluteFillObject, styles.bgOverlay]} pointerEvents="none" />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>题目检索</Text>
         <Text style={styles.subtitle}>输入学科、知识点等描述，AI帮你找到相关题目</Text>
@@ -186,26 +186,27 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 16 },
-  title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
+  bgOverlay: { backgroundColor: 'rgba(216,196,245,0.55)' },
+  title: { fontSize: 24, fontWeight: '700', color: '#2A1940' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
   scopeRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  scopeBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E5E7EB', alignItems: 'center' },
+  scopeBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: 'rgba(123,45,142,0.18)', alignItems: 'center' },
   scopeBtnActive: { backgroundColor: '#7B2D8E', borderColor: '#7B2D8E' },
   scopeText: { fontSize: 15, color: '#6B7280', fontWeight: '500' },
   scopeTextActive: { color: '#FFF' },
   field: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
-  input: { backgroundColor: '#FFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A2E', borderWidth: 1, borderColor: '#E5E7EB' },
-  textArea: { backgroundColor: '#FFF', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#1A1A2E', borderWidth: 1, borderColor: '#E5E7EB', minHeight: 80 },
+  input: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#2A1940', borderWidth: 1, borderColor: 'rgba(123,45,142,0.16)' },
+  textArea: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#2A1940', borderWidth: 1, borderColor: 'rgba(123,45,142,0.16)', minHeight: 80 },
   searchBtn: { backgroundColor: '#7B2D8E', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 4 },
   searchBtnContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   searchBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
   resultsSection: { marginTop: 24 },
   resultsTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E', marginBottom: 12 },
-  emptyCard: { backgroundColor: '#FFF', borderRadius: 16, padding: 24, alignItems: 'center', gap: 4 },
+  emptyCard: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 24, alignItems: 'center', gap: 4 },
   emptyText: { color: '#9CA3AF', fontSize: 15 },
   emptySub: { color: '#D1D5DB', fontSize: 13 },
-  resultCard: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, marginBottom: 10 },
+  resultCard: { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 14, padding: 14, marginBottom: 10 },
   resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   resultSubject: { fontSize: 12, fontWeight: '600', color: '#7B2D8E', backgroundColor: '#F3E8F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   resultType: { fontSize: 12, color: '#6B7280' },
