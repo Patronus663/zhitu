@@ -99,7 +99,7 @@ export default function ChatScreen() {
           onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <FontAwesome6 name="comments" size={40} color="#D1D5DB" />
+              <FontAwesome6 name="comments" size={40} color="#9CA3AF" />
               <Text style={styles.emptyText}>开始和知途对话吧！</Text>
               <Text style={styles.emptySub}>你可以问学习相关的问题</Text>
             </View>
@@ -149,8 +149,8 @@ const styles = StyleSheet.create({
   msgText: { fontSize: 15, lineHeight: 22, color: '#374151' },
   userMsgText: { color: '#FFF' },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 100 },
-  emptyText: { fontSize: 16, color: '#9CA3AF', marginTop: 8 },
-  emptySub: { fontSize: 13, color: '#D1D5DB' },
+  emptyText: { fontSize: 17, color: '#4B5563', marginTop: 8, fontWeight: '600' },
+  emptySub: { fontSize: 13, color: '#6B7280' },
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.82)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.6)' },
   textInput: { flex: 1, backgroundColor: 'rgba(243,244,246,0.8)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#1A1A2E', maxHeight: 100 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#7B2D8E', justifyContent: 'center', alignItems: 'center' },
