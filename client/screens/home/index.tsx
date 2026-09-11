@@ -239,13 +239,14 @@ export default function HomeScreen() {
 
   return (
     <Screen safeAreaEdges={['left', 'right']}>
-      <LinearGradient style={styles.bgContainer} colors={['#BFDFF7', '#E3D2F6', '#F2E9FB']}>
+      <ImageBackground source={require('@/assets/home_bg.jpg')} style={styles.bgContainer} resizeMode="cover">
+      <View style={styles.bgOverlay} pointerEvents="none" />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7B2D8E" />}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header */}
-        <LinearGradient colors={['#A442C9', '#8A2FB5', '#7B2D8E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <LinearGradient colors={['rgba(255,255,255,0.42)', 'rgba(255,255,255,0.20)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
@@ -435,7 +436,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-      </LinearGradient>
+      </ImageBackground>
 
       {/* Task Menu Modal */}
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
@@ -587,18 +588,18 @@ const styles = StyleSheet.create({
   bgContainer: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
-  userName: { fontSize: 22, fontWeight: '700', color: '#FFFFFF' },
+  greeting: { fontSize: 13, color: 'rgba(123,45,142,0.75)', marginBottom: 4 },
+  userName: { fontSize: 22, fontWeight: '700', color: '#5B2479' },
   
   avatarBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
   progressCard: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 16 },
   progressInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  progressTitle: { color: 'rgba(255,255,255,0.8)', fontSize: 14 },
-  progressPercent: { color: '#FFF', fontSize: 24, fontWeight: '700' },
+  progressTitle: { color: 'rgba(91,36,121,0.85)', fontSize: 14 },
+  progressPercent: { color: '#5B2479', fontSize: 24, fontWeight: '700' },
   progressBar: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginBottom: 8 },
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
-  progressSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
+  progressSub: { color: 'rgba(91,36,121,0.7)', fontSize: 12 },
   bgImage: { ...StyleSheet.absoluteFillObject, opacity: 1 },
   bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(250,251,249,0.18)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
