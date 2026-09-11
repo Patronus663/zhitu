@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
   progressSub: { color: 'rgba(91,36,121,0.7)', fontSize: 12 },
   bgImage: { ...StyleSheet.absoluteFillObject, opacity: 1 },
-  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.42)' },
+  bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(216,196,245,0.55)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
