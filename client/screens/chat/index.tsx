@@ -79,7 +79,7 @@ export default function ChatScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerIcon}>
-            <Text style={styles.headerIconText}>知途</Text>
+            <Image source={IMAGE_AVATAR} style={styles.headerIconImg} resizeMode="cover" />
           </View>
           <View>
             <Text style={styles.headerTitle}>和知途聊聊</Text>
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
   bgImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
   bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(247,249,243,0.4)' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: 'rgba(255,255,255,0.78)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.6)' },
-  headerIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#7B2D8E', justifyContent: 'center', alignItems: 'center' },
-  headerIconText: { color: '#FFF', fontSize: 14, fontWeight: '700' },
+  headerIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  headerIconImg: { width: 40, height: 40, borderRadius: 20 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
   headerSub: { fontSize: 12, color: '#9CA3AF' },
   msgList: { flex: 1, padding: 16, gap: 12 },
