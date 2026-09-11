@@ -249,8 +249,10 @@ export default function HomeScreen() {
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>{dateStr} {dayStr}</Text>
-              <Text style={styles.userName}>你好，{user?.nickname || '同学'}</Text>
-              
+              <View style={styles.userNameRow}>
+                <Text style={styles.userName}>你好，{user?.nickname || '同学'}</Text>
+                <Image source={require('@/assets/rabbit_cutout.png')} style={styles.rabbitImg} resizeMode="contain" />
+              </View>
             </View>
             <TouchableOpacity style={styles.avatarBtn} onPress={() => router.push('/profile')}>
               <Text style={styles.avatarText}>{(user?.nickname || '同')[0]}</Text>
@@ -589,7 +591,9 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingBottom: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   greeting: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 },
+  userNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   userName: { fontSize: 22, fontWeight: '700', color: '#FFFFFF' },
+  rabbitImg: { width: 44, height: 48 },
   
   avatarBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   avatarText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
