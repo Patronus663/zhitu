@@ -240,9 +240,9 @@ export default function HomeScreen() {
   return (
     <Screen safeAreaEdges={['left', 'right']} backgroundColor="#F2E7FB">
       <Image
-        source={require('@/assets/微信图片_20260911133310_10_2.jpg')}
+        source={require('@/assets/2.jpg')}
         style={styles.bgImage}
-        resizeMode="contain"
+        resizeMode="cover"
       />
       <View style={styles.bgOverlay} />
       <ScrollView
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
   progressBar: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, marginBottom: 8 },
   progressFill: { height: 6, backgroundColor: '#C9A96E', borderRadius: 3 },
   progressSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
-  bgImage: { ...StyleSheet.absoluteFillObject, opacity: 0.82 },
+  bgImage: { ...StyleSheet.absoluteFillObject, opacity: 0.78 },
   bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(250,251,249,0.18)' },
   section: { paddingHorizontal: 20, marginTop: 24 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
