@@ -13,6 +13,8 @@ interface Message {
   created_at?: string;
 }
 
+const IMAGE_AVATAR = require('@/assets/1788942211508_edit_1282431744545459.png');
+
 export default function ChatScreen() {
   const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
