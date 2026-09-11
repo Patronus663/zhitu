@@ -55,7 +55,11 @@ export default function ChatScreen() {
     <View style={[styles.msgBubble, item.role === 'user' ? styles.userBubble : styles.aiBubble]}>
       {item.role === 'assistant' && (
         <View style={styles.aiAvatar}>
-          <Text style={styles.aiAvatarText}>知</Text>
+          <Image
+            source={require('@/assets/1788942211508_edit_1282431744545459.png')}
+            style={styles.aiAvatarImg}
+            resizeMode="cover"
+          />
         </View>
       )}
       <Text style={[styles.msgText, item.role === 'user' && styles.userMsgText]}>{item.content}</Text>
@@ -138,8 +142,8 @@ const styles = StyleSheet.create({
   msgBubble: { maxWidth: '80%', padding: 12, borderRadius: 16, gap: 4 },
   userBubble: { alignSelf: 'flex-end', backgroundColor: '#7B2D8E', borderBottomRightRadius: 4 },
   aiBubble: { alignSelf: 'flex-start', backgroundColor: '#FFF', borderBottomLeftRadius: 4, flexDirection: 'row', gap: 8 },
-  aiAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center' },
-  aiAvatarText: { fontSize: 11, fontWeight: '700', color: '#7B2D8E' },
+  aiAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  aiAvatarImg: { width: 28, height: 28, borderRadius: 14 },
   msgText: { fontSize: 15, lineHeight: 22, color: '#374151' },
   userMsgText: { color: '#FFF' },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 100 },
