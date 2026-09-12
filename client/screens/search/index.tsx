@@ -188,7 +188,7 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 20 },
-  bgOverlay: { backgroundColor: 'rgba(216,196,245,0.55)' },
+  bgOverlay: { backgroundColor: 'rgba(222,209,247,0.78)' },
   title: { fontSize: 24, fontWeight: '700', color: '#2A1940' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
   scopeRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
