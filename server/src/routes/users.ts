@@ -12,8 +12,9 @@ router.post(
   asyncHandler(async (req, res) => {
     const { id, nickname, major, grade, learning_goal, mastery_expectation, personalized_info } = req.body;
 
-    // 参数校验：id 为可选 UUID，nickname 若提供须为 1-32 字符
-    Validator.check(id === undefined, 'id 必须为 UUID 或省略');
+    // 参数校验：id 可选，若提供须为合法 UUID；nickname 若提供须为 1-32 字符
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    Validator.check(id === undefined || (typeof id === 'string' && UUID_RE.test(id)), 'id 必须为 UUID 或省略');
     Validator.check(nickname === undefined || (typeof nickname === 'string' && nickname.length >= 1 && nickname.length <= 32), 'nickname 长度须为 1-32');
 
     const client = getSupabaseClient();
