@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, ImageBackground } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen } from '@/components/Screen';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +11,7 @@ import { learningApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useUser();
   const { user: authUser, isAuthenticated, logout } = useAuth();
   const router = useSafeRouter();
@@ -62,10 +64,10 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen backgroundColor="#BFDFF7">
+    <Screen safeAreaEdges={['left', 'right']}>
       <ImageBackground source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
       <View style={[StyleSheet.absoluteFillObject, styles.bgOverlay]} pointerEvents="none" />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }}>
         <Text style={styles.title}>学情分析</Text>
         <Text style={styles.subtitle}>了解你的学习状况，获取个性化建议</Text>
 
@@ -174,8 +176,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  bgOverlay: { backgroundColor: 'rgba(216,196,245,0.55)' },
-  container: { padding: 20, paddingTop: 16 },
+  bgOverlay: { backgroundColor: 'rgba(222,209,247,0.78)' },
   accountCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.85)' },
   accountInfo: { flex: 1, marginRight: 12 },
   accountLabel: { color: '#4A5A70', fontSize: 13, marginBottom: 2 },
