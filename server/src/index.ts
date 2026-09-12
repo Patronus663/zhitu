@@ -45,6 +45,13 @@ app.use('/api/v1/learning', learningRoutes);
 app.use('/api/v1/plans', planRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
+// 上传的静态图片资源（错题照片等），dev/production 均可访问
+const uploadsDir = path.resolve(__dirname, '../../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
 // 生产模式：若存在前端静态产物（Expo web export 输出），由后端一体化托管
 // 便于"整个项目"作为单个可执行进程运行（dev 模式不受影响）
 const clientDist = path.resolve(__dirname, '../../client/dist');

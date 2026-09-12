@@ -1,3 +1,5 @@
+import { createFormDataFile } from "@/utils";
+
 const API_BASE = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -86,12 +88,42 @@ export const questionApi = {
   aiAnswer: (data: { content: string; wrong_answer?: string }) =>
     request<{ ai_result: any }>('/api/v1/questions/ai-answer', { method: 'POST', body: JSON.stringify(data) }),
   /**
+   * 上传错题照片到服务器（专用于本地 URI 的照片）
+   * 服务端文件：server/src/routes/questions.ts
+   * 接口：POST /api/v1/questions/upload
+   * Body: FormData with images[]（files）
+   * 返回：{ urls: string[] }
+   */
+  uploadQuestionImages: async (uris: string[]): Promise<string[]> => {
+    if (!uris || uris.length === 0) return [];
+    const formData = new FormData();
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i];
+      const lower = uri.toLowerCase();
+      const mime = /\.png$/.test(lower) ? 'image/png' : /\.gif$/.test(lower) ? 'image/gif' : /\.webp$/.test(lower) ? 'image/webp' : 'image/jpeg';
+      const file = await createFormDataFile(uri, `question-${Date.now()}-${i}.${mime === 'image/png' ? 'png' : 'jpg'}`, mime);
+      formData.append('images', file as any);
+    }
+    const result = await uploadFile<{ urls: string[] }>('/api/v1/questions/upload', formData);
+    return result.urls || [];
+  },
+  /**
    * 服务端文件：server/src/routes/questions.ts
    * 接口：POST /api/v1/questions
    * Body 参数：user_id: string, content: string, answer: string, images?: string[], subject: string, question_type: string, knowledge_points: string[], methods: string[], difficulty: number, wrong_answer?: string, error_analysis?: string
+   * 说明：images 若为本地 URI（file:/content: 开头），会自动先上传为公网 URL 再保存，保证查看时照片可见
    */
-  create: (data: any) =>
-    request<any>('/api/v1/questions', { method: 'POST', body: JSON.stringify(data) }),
+  create: async (data: any) => {
+    let images = data.images || [];
+    const hasLocal = images.some((u: string) => typeof u === 'string' && /^(?:file:|content:|\/)/.test(u));
+    if (hasLocal) {
+      images = await questionApi.uploadQuestionImages(images);
+    }
+    return request<any>('/api/v1/questions', {
+      method: 'POST',
+      body: JSON.stringify({ ...data, images }),
+    });
+  },
   /**
    * 服务端文件：server/src/routes/questions.ts
    * 接口：GET /api/v1/questions?user_id={user_id}

@@ -1,5 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getSupabaseClient } from '../storage/database/supabase-client.js';
 import { invokeLLM } from '../services/llm.js';
 
@@ -7,6 +11,44 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+// 本地上传目录（错题照片等静态资源）
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.resolve(__dirname, '../../../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+function extFromMime(mime: string): string {
+  const map: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/png': '.png',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+  };
+  return map[mime] || '.jpg';
+}
+
+// POST /api/v1/questions/upload - 上传错题照片（返回公网可访问的 URL 数组）
+router.post('/upload', upload.array('images', 5), (req, res, next) => {
+  try {
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: '未收到图片' });
+    }
+    const host = `${req.protocol}://${req.get('host')}`;
+    const urls: string[] = [];
+    for (const file of files) {
+      const name = `${Date.now()}_${crypto.randomBytes(8).toString('hex')}${extFromMime(file.mimetype)}`;
+      fs.writeFileSync(path.join(uploadsDir, name), file.buffer);
+      urls.push(`${host}/uploads/${name}`);
+    }
+    res.status(200).json({ urls });
+  } catch (e) {
+    next(e);
+  }
 });
 
 // POST /api/v1/questions/analyze-image - Analyze image with LLM vision

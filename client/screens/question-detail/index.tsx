@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Modal, Image } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -19,6 +19,7 @@ interface QuestionDetail {
   wrong_answer?: string;
   is_mastered: boolean;
   created_at: string;
+  images?: string[];
 }
 
 export default function QuestionDetailScreen() {
@@ -148,6 +149,23 @@ export default function QuestionDetailScreen() {
             <Text style={styles.questionText}>{question.content}</Text>
           </View>
         </View>
+
+        {/* Question Photos */}
+        {Array.isArray(question.images) && question.images.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>题目照片</Text>
+            <View style={styles.photosContainer}>
+              {question.images.map((uri, index) => (
+                <Image
+                  key={index}
+                  source={{ uri }}
+                  style={styles.photoImage}
+                  resizeMode="cover"
+                />
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Wrong Answer (if exists) */}
         {question.wrong_answer && (
@@ -279,6 +297,18 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#6B7280',
+  },
+  photosContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  photoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    backgroundColor: '#E5E7EB',
   },
   header: {
     flexDirection: 'row',
