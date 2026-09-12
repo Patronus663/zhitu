@@ -45,9 +45,12 @@ app.use('/api/v1/learning', learningRoutes);
 app.use('/api/v1/plans', planRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
-// 上传的静态图片资源（错题照片等）。基于进程工作目录（生产环境 CWD 为可写区），
-// 避免依赖 project 根目录在只读部署环境中出现权限错误。
-const uploadsDir = path.resolve(process.cwd(), 'uploads');
+// 上传的静态图片资源（错题照片等）。
+// 生产环境部署目录为只读，使用 /tmp（可写临时区）；开发环境使用项目内 uploads
+const uploadsDir =
+  process.env.NODE_ENV === 'production'
+    ? path.resolve('/tmp', 'zhitoo-uploads')
+    : path.resolve(process.cwd(), 'uploads');
 try {
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });

@@ -15,9 +15,11 @@ const upload = multer({
 
 // 本地上传目录（错题照片等静态资源）
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// 与入口 index.ts 保持一致：基于进程工作目录（生产环境 CWD 为可写区），
-// 避免依赖 project 根在只读部署环境中无写权限导致部署崩溃。
-const uploadsDir = path.resolve(process.cwd(), 'uploads');
+// 与入口 index.ts 保持一致：生产环境部署目录只读，使用 /tmp 可写临时区
+const uploadsDir =
+  process.env.NODE_ENV === 'production'
+    ? path.resolve('/tmp', 'zhitoo-uploads')
+    : path.resolve(process.cwd(), 'uploads');
 try {
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
