@@ -5,8 +5,10 @@ import { useUser } from '@/contexts/UserContext';
 import { searchApi } from '@/utils/api';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SearchScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useUser();
   const router = useSafeRouter();
   const [scope, setScope] = useState<'cloud' | 'user'>('cloud');
@@ -63,10 +65,10 @@ export default function SearchScreen() {
   };
 
   return (
-    <Screen backgroundColor="#BFDFF7">
+    <Screen safeAreaEdges={['left', 'right', 'bottom']}>
       <RNImage source={require('@/assets/home_bg.jpg')} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
       <View style={[StyleSheet.absoluteFillObject, styles.bgOverlay]} pointerEvents="none" />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}>
         <Text style={styles.title}>题目检索</Text>
         <Text style={styles.subtitle}>输入学科、知识点等描述，AI帮你找到相关题目</Text>
 
@@ -185,7 +187,7 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 16 },
+  container: { padding: 20 },
   bgOverlay: { backgroundColor: 'rgba(216,196,245,0.55)' },
   title: { fontSize: 24, fontWeight: '700', color: '#2A1940' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4, marginBottom: 20 },
