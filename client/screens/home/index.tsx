@@ -492,7 +492,7 @@ export default function HomeScreen() {
       <Modal visible={addModalVisible} transparent animationType="slide" onRequestClose={() => setAddModalVisible(false)}>
         <TouchableWithoutFeedback onPress={() => setAddModalVisible(false)}>
           <View style={styles.menuOverlay}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%' }}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ width: '100%', justifyContent: 'center', alignItems: 'center' }}>
               <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                 <View style={styles.addModal}>
                   <View style={styles.addModalHeader}>
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   // Add button and modal styles
   addBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center' },
   hideBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' },
-  addModal: { backgroundColor: '#FFF', borderRadius: 20, width: 340, padding: 24 },
+  addModal: { backgroundColor: '#FFF', borderRadius: 20, width: '86%', maxWidth: 340, padding: 24, alignSelf: 'center' },
   addModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   addModalTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E' },
   addModalBody: { gap: 12, marginBottom: 20 },
