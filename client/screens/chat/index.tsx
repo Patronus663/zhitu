@@ -75,7 +75,7 @@ export default function ChatScreen() {
           />
         </View>
       )}
-      <Text style={[styles.msgText, item.role === 'user' && styles.userMsgText]}>{item.content}</Text>
+      <Text style={[styles.msgText, item.role === 'user' ? styles.userMsgText : styles.aiMsgText]}>{item.content}</Text>
     </View>
   );
 
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
   aiAvatarImg: { width: 28, height: 28, borderRadius: 14 },
   msgText: { flexShrink: 1, fontSize: 15, lineHeight: 22, color: '#374151' },
   userMsgText: { color: '#FFF' },
+  aiMsgText: { flex: 1 },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 100 },
   emptyText: { fontSize: 17, color: '#4B5563', marginTop: 8, fontWeight: '600' },
   emptySub: { fontSize: 13, color: '#6B7280' },
