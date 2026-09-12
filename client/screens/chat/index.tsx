@@ -117,6 +117,7 @@ export default function ChatScreen() {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
+          style={styles.list}
           contentContainerStyle={styles.msgList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
           ListEmptyComponent={
@@ -167,6 +168,7 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  list: { flex: 1 },
   bgImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
   bgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(247,249,243,0.4)' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: 'rgba(255,255,255,0.78)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.6)' },
@@ -174,7 +176,7 @@ const styles = StyleSheet.create({
   headerIconImg: { width: 40, height: 40, borderRadius: 20 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
   headerSub: { fontSize: 12, color: '#9CA3AF' },
-  msgList: { flex: 1, padding: 16, gap: 12 },
+  msgList: { padding: 16, gap: 12 },
   msgBubble: { maxWidth: '80%', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16 },
   userRow: { alignSelf: 'flex-end', flexDirection: 'row', justifyContent: 'flex-end' },
   userBubble: { backgroundColor: '#7B2D8E', borderBottomRightRadius: 4 },
