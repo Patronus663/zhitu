@@ -45,10 +45,16 @@ app.use('/api/v1/learning', learningRoutes);
 app.use('/api/v1/plans', planRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
-// 上传的静态图片资源（错题照片等），dev/production 均可访问
-const uploadsDir = path.resolve(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// 上传的静态图片资源（错题照片等）。基于进程工作目录（生产环境 CWD 为可写区），
+// 避免依赖 project 根目录在只读部署环境中出现权限错误。
+const uploadsDir = path.resolve(process.cwd(), 'uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (err) {
+  // 目录创建失败不可阻塞服务启动；仅记录告警，写入图片时再按需重试
+  console.warn('[uploads] 目录不可写，上传功能可能不可用:', (err as Error).message);
 }
 app.use('/uploads', express.static(uploadsDir));
 
