@@ -64,9 +64,18 @@ export default function ChatScreen() {
     sendText(input);
   };
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <View style={[styles.msgBubble, item.role === 'user' ? styles.userBubble : styles.aiBubble]}>
-      {item.role === 'assistant' && (
+  const renderMessage = ({ item }: { item: Message }) => {
+    if (item.role === 'user') {
+      return (
+        <View style={styles.userRow}>
+          <View style={[styles.msgBubble, styles.userBubble]}>
+            <Text style={[styles.msgText, styles.userMsgText]}>{item.content}</Text>
+          </View>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.aiRow}>
         <View style={styles.aiAvatar}>
           <Image
             source={require('@/assets/1788942211508_edit_1282431744545459.png')}
@@ -74,10 +83,12 @@ export default function ChatScreen() {
             resizeMode="cover"
           />
         </View>
-      )}
-      <Text style={[styles.msgText, item.role === 'user' ? styles.userMsgText : styles.aiMsgText]}>{item.content}</Text>
-    </View>
-  );
+        <View style={[styles.msgBubble, styles.aiBubble]}>
+          <Text style={[styles.msgText, styles.aiMsgText]}>{item.content}</Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <Screen backgroundColor="#F4F6F0">
@@ -164,14 +175,16 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
   headerSub: { fontSize: 12, color: '#9CA3AF' },
   msgList: { flex: 1, padding: 16, gap: 12 },
-  msgBubble: { maxWidth: '80%', padding: 12, borderRadius: 16, gap: 4 },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: '#7B2D8E', borderBottomRightRadius: 4 },
-  aiBubble: { alignSelf: 'flex-start', backgroundColor: '#FFF', borderBottomLeftRadius: 4, flexDirection: 'row', gap: 8, maxWidth: '80%' },
+  msgBubble: { maxWidth: '80%', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16 },
+  userRow: { alignSelf: 'flex-end', flexDirection: 'row', justifyContent: 'flex-end' },
+  userBubble: { backgroundColor: '#7B2D8E', borderBottomRightRadius: 4 },
+  aiRow: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'flex-start', gap: 8, maxWidth: '85%' },
+  aiBubble: { backgroundColor: '#FFF', borderBottomLeftRadius: 4, flexShrink: 1 },
   aiAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F3E8F9', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   aiAvatarImg: { width: 28, height: 28, borderRadius: 14 },
-  msgText: { flexShrink: 1, fontSize: 15, lineHeight: 22, color: '#374151' },
+  msgText: { fontSize: 15, lineHeight: 22, color: '#374151' },
   userMsgText: { color: '#FFF' },
-  aiMsgText: { flex: 1 },
+  aiMsgText: { },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 100 },
   emptyText: { fontSize: 17, color: '#4B5563', marginTop: 8, fontWeight: '600' },
   emptySub: { fontSize: 13, color: '#6B7280' },
