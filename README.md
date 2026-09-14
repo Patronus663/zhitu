@@ -15,7 +15,7 @@
 | 前端样式 | TailwindCSS（Uniwind）+ StyleSheet | `client/global.css` 主题设计令牌 |
 | 状态/存储 | React Context、AsyncStorage、@supabase/supabase-js | AuthContext / UserContext |
 | 后端 | Express.js（ESM + TypeScript） | `server/src/` |
-| 数据库 | Supabase（PostgreSQL + Drizzle ORM） | 微积分试题 |
+| 数据库 | Supabase（PostgreSQL + Drizzle ORM） | 微积分试题等 |
 | AI 能力 | 豆包 doubao-seed（`server/src/services/llm.ts`） | 判题、学情、计划、答题、聊天(SSE) |
 | 联网检索 | 豆包 Web Search + 云端题库 | 题库不足时联网补充 |
 | 认证 | Supabase Auth（邮箱 + 密码） | `x-session` 头部 |
