@@ -15,7 +15,7 @@
 | 前端样式 | TailwindCSS（Uniwind）+ StyleSheet | `client/global.css` 主题设计令牌 |
 | 状态/存储 | React Context、AsyncStorage、@supabase/supabase-js | AuthContext / UserContext |
 | 后端 | Express.js（ESM + TypeScript） | `server/src/` |
-| 数据库 | Supabase（PostgreSQL + Drizzle ORM） | 10 张表 |
+| 数据库 | Supabase（PostgreSQL + Drizzle ORM） | 9 张表 |
 | AI 能力 | 豆包 doubao-seed（`server/src/services/llm.ts`） | 判题、学情、计划、答题、聊天(SSE) |
 | 联网检索 | 豆包 Web Search + 云端题库 | 题库不足时联网补充 |
 | 认证 | Supabase Auth（邮箱 + 密码） | `x-session` 头部 |
@@ -102,6 +102,7 @@
 - `PUT /:id` 更新用户 / 补全 onboarding
 
 ### questions（`/api/v1/questions`）
+- `POST /upload`（multipart，最多 5 张图）上传错题照片，返回公网可访问的 URL 数组
 - `POST /analyze-image`（multipart）AI 图像识别题目文字
 - `POST /analyze` AI 判题 / 标签生成
 - `POST /validate-tags` 校验用户修改后的标签
